@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Settings - Tété Platform</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .profile-container {
+            min-height: 100vh;
+            background: var(--black);
+            padding-bottom: 100px;
+        }
+
+        .profile-header {
+            background: linear-gradient(180deg, rgba(15,15,15,0.98), rgba(0,0,0,0.98));
+            border-bottom: 1px solid rgba(231,76,60,0.3);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-button {
+            color: var(--grey-light);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .back-button:hover {
+            color: var(--primary);
+        }
+
+        .profile-main {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            font-size: 2.5em;
+            color: var(--white);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .page-subtitle {
+            color: var(--grey);
+            font-size: 1.1em;
+            margin-bottom: 40px;
+        }
+
+        .profile-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 30px;
+        }
+
+        .profile-sidebar {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            padding: 30px;
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 48px;
+            color: var(--white);
+            font-weight: 700;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar-upload {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.8);
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .profile-avatar:hover .avatar-upload {
+            opacity: 1;
+        }
+
+        .sidebar-username {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 5px;
+        }
+
+        .sidebar-email {
+            text-align: center;
+            font-size: 14px;
+            color: var(--grey);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-nav-item {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-nav-link {
+            display: block;
+            padding: 12px 16px;
+            color: var(--grey-light);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .sidebar-nav-link:hover {
+            background: rgba(231,76,60,0.1);
+            color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .sidebar-nav-link.active {
+            background: rgba(231,76,60,0.15);
+            color: var(--primary);
+            border-left: 3px solid var(--primary);
+        }
+
+        .profile-content {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--burnt-orange), var(--gold));
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: var(--white);
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .security-section {
+            background: rgba(231,76,60,0.05);
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .security-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(231,76,60,0.1);
+        }
+
+        .security-item:last-child {
+            border-bottom: none;
+        }
+
+        .security-info {
+            flex: 1;
+        }
+
+        .security-title {
+            color: var(--white);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .security-description {
+            color: var(--grey);
+            font-size: 14px;
+        }
+
+        .bank-details-card {
+            background: rgba(243,156,18,0.05);
+            border: 1px solid rgba(243,156,18,0.2);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .bank-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .bank-item {
+            background: rgba(255,255,255,0.02);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .bank-label {
+            color: var(--grey);
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .bank-value {
+            color: var(--white);
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .verification-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .verified {
+            background: rgba(39,174,96,0.2);
+            color: var(--green);
+            border: 1px solid var(--green);
+        }
+
+        .unverified {
+            background: rgba(231,76,60,0.2);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .danger-zone {
+            background: rgba(231,76,60,0.05);
+            border: 2px solid rgba(231,76,60,0.3);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 40px;
+        }
+
+        .danger-zone-title {
+            color: var(--primary);
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .danger-zone-description {
+            color: var(--grey-light);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .success-message {
+            background: rgba(39,174,96,0.1);
+            border: 1px solid var(--green);
+            color: var(--green);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message {
+            background: rgba(231,76,60,0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .password-strength {
+            height: 5px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0;
+            transition: all 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .strength-weak {
+            width: 33%;
+            background: var(--primary);
+        }
+
+        .strength-medium {
+            width: 66%;
+            background: var(--gold);
+        }
+
+        .strength-strong {
+            width: 100%;
+            background: var(--green);
+        }
+
+        @media (max-width: 768px) {
+            .profile-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-sidebar {
+                position: static;
+                margin-bottom: 30px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-content {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <!-- Header -->
+        <header class="profile-header">
+            <div class="header-content">
+                <a href="/dashboard.html" class="back-button">
+                    ← Back to Dashboard
+                </a>
+                <h1 class="logo">TÉTÉ</h1>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="profile-main">
+            <h1 class="page-title">Profile Settings</h1>
+            <p class="page-subtitle">Manage your account settings and preferences</p>
+
+            <div class="profile-layout">
+                <!-- Sidebar -->
+                <aside class="profile-sidebar">
+                    <div class="profile-avatar" id="avatarContainer">
+                        <span id="avatarInitial">?</span>
+                        <div class="avatar-upload">
+                            <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
+                            <label for="avatarUpload" style="cursor: pointer;">Change</label>
+                        </div>
+                    </div>
+                    
+                    <h3 class="sidebar-username" id="sidebarUsername">Loading...</h3>
+                    <p class="sidebar-email" id="sidebarEmail">Loading...</p>
+                    
+                    <nav>
+                        <ul class="sidebar-nav">
+                            <li class="sidebar-nav-item">
+                                <a href="#personal" class="sidebar-nav-link active" data-tab="personal">
+                                    Personal Info
+                                </a>
+                            </li>
+                            <li class="sidebar-nav-item">
+                                <a href="#bank" class="sidebar-nav-link" data-tab="bank">
+                                    Bank Details
+                                </a>
+                            </li>
+                            <li class="sidebar-nav-item">
+                                <a href="#security" class="sidebar-nav-link" data-tab="security">
+                                    Security
+                                </a>
+                            </li>
+                            <li class="sidebar-nav-item">
+                                <a href="#preferences" class="sidebar-nav-link" data-tab="preferences">
+                                    Preferences
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </aside>
+
+                <!-- Content Area -->
+                <div class="profile-content">
+                    <!-- Success/Error Messages -->
+                    <div class="success-message" id="successMessage"></div>
+                    <div class="error-message" id="errorMessage"></div>
+
+                    <!-- Personal Info Tab -->
+                    <div class="tab-content active" id="personal-tab">
+                        <h2 class="section-title">Personal Information</h2>
+                        
+                        <form id="personalInfoForm">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">First Name*</label>
+                                    <input type="text" class="form-input" id="firstName" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Last Name*</label>
+                                    <input type="text" class="form-input" id="lastName" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Middle Name</label>
+                                    <input type="text" class="form-input" id="middleName">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Username</label>
+                                    <input type="text" class="form-input" id="username" readonly style="opacity: 0.7;">
+                                    <small style="color: var(--grey); font-size: 12px;">Username cannot be changed</small>
+                                </div>
+                                
+                                <div class="form-group full-width">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-input" id="email" readonly style="opacity: 0.7;">
+                                    <small style="color: var(--grey); font-size: 12px;">Email cannot be changed</small>
+                                </div>
+                                
+                                <div class="form-group full-width">
+                                    <label class="form-label">Bio</label>
+                                    <textarea class="form-input" id="bio" rows="4" maxlength="200" 
+                                              placeholder="Tell us a bit about yourself..."></textarea>
+                                    <div class="char-counter">
+                                        <span id="bioCount">0</span>/200
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn-3d">Save Changes</button>
+                        </form>
+                    </div>
+
+                    <!-- Bank Details Tab -->
+                    <div class="tab-content" id="bank-tab">
+                        <h2 class="section-title">Bank Details</h2>
+                        
+                        <div class="bank-details-card">
+                            <h3 style="color: var(--white); margin-bottom: 20px; font-size: 1.2em;">
+                                Current Bank Information
+                            </h3>
+                            
+                            <div class="bank-info">
+                                <div class="bank-item">
+                                    <div class="bank-label">Bank Name</div>
+                                    <div class="bank-value" id="currentBankName">Loading...</div>
+                                </div>
+                                <div class="bank-item">
+                                    <div class="bank-label">Account Number</div>
+                                    <div class="bank-value" id="currentAccountNumber">Loading...</div>
+                                </div>
+                                <div class="bank-item">
+                                    <div class="bank-label">Account Name</div>
+                                    <div class="bank-value" id="currentAccountName">Loading...</div>
+                                </div>
+                                <div class="bank-item">
+                                    <div class="bank-label">Verification Status</div>
+                                    <div class="bank-value">
+                                        <span class="verification-badge verified">✓ Verified</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form id="bankDetailsForm">
+                            <h3 style="color: var(--white); margin-bottom: 20px;">Update Bank Details</h3>
+                            
+                            <div class="form-grid">
+                                <div class="form-group full-width">
+                                    <label class="form-label">Bank Name*</label>
+                                    <select class="form-input" id="bankName" required>
+                                        <option value="">Select Bank</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group full-width">
+                                    <label class="form-label">Account Number*</label>
+                                    <input type="text" class="form-input" id="accountNumber" 
+                                           pattern="[0-9]{10}" maxlength="10" required
+                                           placeholder="10-digit NUBAN">
+                                    <small style="color: var(--grey); font-size: 12px;">
+                                        Should match your bank account name
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div style="background: rgba(231,76,60,0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                                <p style="color: var(--gold); font-size: 14px; margin: 0;">
+                                    ⚠️ Important: Changing your bank details will require re-verification and may 
+                                    delay withdrawals for 24 hours for security purposes.
+                                </p>
+                            </div>
+                            
+                            <button type="submit" class="btn-3d">Update Bank Details</button>
+                        </form>
+                    </div>
+
+                    <!-- Security Tab -->
+                    <div class="tab-content" id="security-tab">
+                        <h2 class="section-title">Security Settings</h2>
+                        
+                        <div class="security-section">
+                            <div class="security-item">
+                                <div class="security-info">
+                                    <div class="security-title">Two-Factor Authentication</div>
+                                    <div class="security-description">
+                                        Add an extra layer of security to your account
+                                    </div>
+                                </div>
+                                <button class="btn-3d outline" style="padding: 10px 20px; font-size: 14px;">
+                                    Enable 2FA
+                                </button>
+                            </div>
+                            
+                            <div class="security-item">
+                                <div class="security-info">
+                                    <div class="security-title">Login Activity</div>
+                                    <div class="security-description">
+                                        Last login: <span id="lastLogin">Loading...</span>
+                                    </div>
+                                </div>
+                                <a href="#" style="color: var(--primary); text-decoration: none;">View All →</a>
+                            </div>
+                        </div>
+                        
+                        <form id="passwordForm" style="margin-top: 30px;">
+                            <h3 style="color: var(--white); margin-bottom: 20px;">Change Password</h3>
+                            
+                            <div class="form-grid">
+                                <div class="form-group full-width">
+                                    <label class="form-label">Current Password*</label>
+                                    <input type="password" class="form-input" id="currentPassword" required>
+                                </div>
+                                
+                                <div class="form-group full-width">
+                                    <label class="form-label">New Password*</label>
+                                    <input type="password" class="form-input" id="newPassword" required>
+                                    <div class="password-strength">
+                                        <div class="password-strength-bar" id="passwordStrength"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group full-width">
+                                    <label class="form-label">Confirm New Password*</label>
+                                    <input type="password" class="form-input" id="confirmPassword" required>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn-3d">Update Password</button>
+                        </form>
+                    </div>
+
+                    <!-- Preferences Tab -->
+                    <div class="tab-content" id="preferences-tab">
+                        <h2 class="section-title">Preferences</h2>
+                        
+                        <form id="preferencesForm">
+                            <div class="security-section">
+                                <h3 style="color: var(--white); margin-bottom: 20px;">Notification Settings</h3>
+                                
+                                <div class="security-item">
+                                    <div class="security-info">
+                                        <div class="security-title">Email Notifications</div>
+                                        <div class="security-description">
+                                            Receive updates about your wagers via email
+                                        </div>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="emailNotifications" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="security-item">
+                                    <div class="security-info">
+                                        <div class="security-title">SMS Notifications</div>
+                                        <div class="security-description">
+                                            Get SMS alerts for important events
+                                        </div>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="smsNotifications">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="security-item">
+                                    <div class="security-info">
+                                        <div class="security-title">Marketing Communications</div>
+                                        <div class="security-description">
+                                            Receive promotional offers and platform updates
+                                        </div>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="marketingEmails">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn-3d" style="margin-top: 30px;">Save Preferences</button>
+                        </form>
+                        
+                        <div class="danger-zone">
+                            <h3 class="danger-zone-title">Danger Zone</h3>
+                            <p class="danger-zone-description">
+                                Once you delete your account, there is no going back. 
+                                All your data, wagers, and balance will be permanently removed.
+                            </p>
+                            <button class="btn-3d" style="background: var(--primary);" onclick="confirmDeleteAccount()">
+                                Delete Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <style>
+        /* Switch styles for preferences */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255,255,255,0.1);
+            transition: .4s;
+            border-radius: 26px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--green);
+            border-color: var(--green);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+    </style>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // Check authentication
+        if (!requireCompleteProfile()) {
+            // Redirect handled by requireCompleteProfile
+        }
+
+        let currentUser = teteAPI.user;
+        let banks = [];
+
+        // Tab switching
+        document.querySelectorAll('.sidebar-nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Update active states
+                document.querySelectorAll('.sidebar-nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                
+                this.classList.add('active');
+                const tabId = this.dataset.tab + '-tab';
+                document.getElementById(tabId).classList.add('active');
+                
+                // Update URL hash
+                window.location.hash = this.dataset.tab;
+            });
+        });
+
+        // Load user data
+        async function loadUserData() {
+            try {
+                // Update sidebar
+                document.getElementById('sidebarUsername').textContent = currentUser.username;
+                document.getElementById('sidebarEmail').textContent = currentUser.email;
+                document.getElementById('avatarInitial').textContent = currentUser.username.charAt(0).toUpperCase();
+
+                // Personal info
+                document.getElementById('firstName').value = currentUser.first_name || '';
+                document.getElementById('lastName').value = currentUser.last_name || '';
+                document.getElementById('middleName').value = currentUser.middle_name || '';
+                document.getElementById('username').value = currentUser.username;
+                document.getElementById('email').value = currentUser.email;
+                document.getElementById('bio').value = currentUser.bio || '';
+                updateCharCount('bio', 'bioCount');
+
+                // Bank details
+                document.getElementById('currentBankName').textContent = currentUser.bank_name || 'Not set';
+                document.getElementById('currentAccountNumber').textContent = currentUser.account_number || 'Not set';
+                document.getElementById('currentAccountName').textContent = 
+                    `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || 'Not set';
+
+                // Security
+                const lastLogin = currentUser.last_login || new Date().toISOString();
+                document.getElementById('lastLogin').textContent = formatDate(lastLogin);
+
+                // Load banks
+                await loadBanks();
+            } catch (error) {
+                console.error('Failed to load user data:', error);
+            }
+        }
+
+        // Load banks
+        async function loadBanks() {
+            try {
+                const response = await teteAPI.getBanks();
+                banks = response.banks;
+                
+                const select = document.getElementById('bankName');
+                select.innerHTML = '<option value="">Select Bank</option>' +
+                    banks.map(bank => `<option value="${bank.name}">${bank.name}</option>`).join('');
+                
+                if (currentUser.bank_name) {
+                    select.value = currentUser.bank_name;
+                }
+            } catch (error) {
+                console.error('Failed to load banks:', error);
+            }
+        }
+
+        // Character counter
+        function updateCharCount(inputId, countId) {
+            const input = document.getElementById(inputId);
+            const count = document.getElementById(countId);
+            count.textContent = input.value.length;
+        }
+
+        document.getElementById('bio').addEventListener('input', function() {
+            updateCharCount('bio', 'bioCount');
+        });
+
+        // Password strength checker
+        document.getElementById('newPassword').addEventListener('input', function() {
+            const password = this.value;
+            const strengthBar = document.getElementById('passwordStrength');
+            
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+            if (password.match(/[0-9]/)) strength++;
+            if (password.match(/[^a-zA-Z0-9]/)) strength++;
+            
+            strengthBar.className = 'password-strength-bar';
+            if (strength <= 1) {
+                strengthBar.classList.add('strength-weak');
+            } else if (strength === 2) {
+                strengthBar.classList.add('strength-medium');
+            } else {
+                strengthBar.classList.add('strength-strong');
+            }
+        });
+
+        // Show message
+        function showMessage(message, type = 'success') {
+            const element = document.getElementById(type + 'Message');
+            element.textContent = message;
+            element.style.display = 'block';
+            
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        // Personal info form
+        document.getElementById('personalInfoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            try {
+                const profileData = {
+                    first_name: document.getElementById('firstName').value,
+                    last_name: document.getElementById('lastName').value,
+                    middle_name: document.getElementById('middleName').value,
+                    bio: document.getElementById('bio').value
+                };
+
+                const response = await teteAPI.updateProfile(profileData);
+                currentUser = response.user;
+                showMessage('Personal information updated successfully!');
+            } catch (error) {
+                showMessage(error.message || 'Failed to update profile', 'error');
+            }
+        });
+
+        // Bank details form
+        document.getElementById('bankDetailsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!confirm('Are you sure you want to update your bank details? This may delay withdrawals for 24 hours.')) {
+                return;
+            }
+            
+            try {
+                const bankData = {
+                    bank_name: document.getElementById('bankName').value,
+                    account_number: document.getElementById('accountNumber').value
+                };
+
+                const response = await teteAPI.updateProfile(bankData);
+                currentUser = response.user;
+                
+                // Update display
+                document.getElementById('currentBankName').textContent = bankData.bank_name;
+                document.getElementById('currentAccountNumber').textContent = bankData.account_number;
+                
+                showMessage('Bank details updated successfully!');
+            } catch (error) {
+                showMessage(error.message || 'Failed to update bank details', 'error');
+            }
+        });
+
+        // Password form
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                showMessage('Passwords do not match', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showMessage('Password must be at least 8 characters long', 'error');
+                return;
+            }
+            
+            try {
+                // This would call a password update endpoint
+                showToast('Password update endpoint not implemented yet', 'info');
+                document.getElementById('passwordForm').reset();
+            } catch (error) {
+                showMessage(error.message || 'Failed to update password', 'error');
+            }
+        });
+
+        // Preferences form
+        document.getElementById('preferencesForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const preferences = {
+                email_notifications: document.getElementById('emailNotifications').checked,
+                sms_notifications: document.getElementById('smsNotifications').checked,
+                marketing_emails: document.getElementById('marketingEmails').checked
+            };
+            
+            showToast('Preferences saved successfully!', 'success');
+        });
+
+        // Avatar upload
+        document.getElementById('avatarUpload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('Avatar must be less than 2MB', 'error');
+                return;
+            }
+            
+            showToast('Avatar upload not implemented yet', 'info');
+        });
+
+        // Delete account
+        function confirmDeleteAccount() {
+            if (confirm('Are you absolutely sure you want to delete your account? This action cannot be undone.')) {
+                if (confirm('This is your final warning. All your data will be permanently deleted. Continue?')) {
+                    showToast('Account deletion not implemented yet', 'info');
+                }
+            }
+        }
+
+        // Check for hash on load
+        if (window.location.hash) {
+            const tab = window.location.hash.substring(1);
+            const link = document.querySelector(`[data-tab="${tab}"]`);
+            if (link) {
+                link.click();
+            }
+        }
+
+        // Initialize
+        loadUserData();
+    </script>
+</body>
+</html>

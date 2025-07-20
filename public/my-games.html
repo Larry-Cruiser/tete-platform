@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Games - Tété Platform</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .games-container {
+            min-height: 100vh;
+            background: var(--black);
+            padding-bottom: 100px;
+        }
+
+        .games-header {
+            background: linear-gradient(180deg, rgba(15,15,15,0.98), rgba(0,0,0,0.98));
+            border-bottom: 1px solid rgba(231,76,60,0.3);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-button {
+            color: var(--grey-light);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .back-button:hover {
+            color: var(--primary);
+        }
+
+        .games-main {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            font-size: 2.5em;
+            color: var(--white);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .page-subtitle {
+            color: var(--grey);
+            font-size: 1.1em;
+            margin-bottom: 40px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--burnt-orange));
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: var(--grey);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .game-tabs {
+            margin-bottom: 30px;
+        }
+
+        .wager-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .wager-card {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .wager-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(231,76,60,0.2);
+            border-color: var(--primary);
+        }
+
+        .wager-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .wager-title {
+            font-size: 1.3em;
+            color: var(--white);
+            font-weight: 600;
+            margin-bottom: 5px;
+            flex: 1;
+        }
+
+        .wager-meta {
+            display: flex;
+            gap: 15px;
+            color: var(--grey);
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .wager-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .wager-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-active {
+            background: rgba(39,174,96,0.2);
+            color: var(--green);
+            border: 1px solid var(--green);
+        }
+
+        .status-pending {
+            background: rgba(243,156,18,0.2);
+            color: var(--gold);
+            border: 1px solid var(--gold);
+        }
+
+        .status-completed {
+            background: rgba(149,165,166,0.2);
+            color: var(--grey-light);
+            border: 1px solid var(--grey-medium);
+        }
+
+        .status-dispute {
+            background: rgba(231,76,60,0.2);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        .wager-countdown {
+            background: rgba(231,76,60,0.1);
+            border: 1px solid rgba(231,76,60,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .countdown-label {
+            color: var(--grey);
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .countdown-timer {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: var(--primary);
+            font-family: monospace;
+        }
+
+        .countdown-timer.expired {
+            color: var(--green);
+        }
+
+        .wager-participants {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .participant {
+            text-align: center;
+            flex: 1;
+        }
+
+        .participant-label {
+            color: var(--grey);
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .participant-name {
+            color: var(--white);
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .vs-divider {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 20px;
+            margin: 0 20px;
+        }
+
+        .wager-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: 2px solid rgba(231,76,60,0.3);
+            border-radius: 10px;
+            color: var(--white);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .action-button:hover {
+            background: rgba(231,76,60,0.1);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .action-button.primary {
+            background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+            border: none;
+        }
+
+        .action-button.primary:hover {
+            box-shadow: 0 10px 20px rgba(231,76,60,0.3);
+        }
+
+        .action-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-title {
+            font-size: 1.5em;
+            color: var(--white);
+            margin-bottom: 10px;
+        }
+
+        .empty-message {
+            color: var(--grey);
+            margin-bottom: 30px;
+        }
+
+        .outcome-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .outcome-button {
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .outcome-button.win {
+            background: rgba(39,174,96,0.1);
+            border-color: rgba(39,174,96,0.3);
+            color: var(--green);
+        }
+
+        .outcome-button.win:hover {
+            background: rgba(39,174,96,0.2);
+            border-color: var(--green);
+        }
+
+        .outcome-button.lose {
+            background: rgba(231,76,60,0.1);
+            border-color: rgba(231,76,60,0.3);
+            color: var(--primary);
+        }
+
+        .outcome-button.lose:hover {
+            background: rgba(231,76,60,0.2);
+            border-color: var(--primary);
+        }
+
+        .outcome-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .outcome-section {
+            background: rgba(255,255,255,0.02);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .outcome-section-title {
+            color: var(--white);
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .outcome-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .outcome-option:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .outcome-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary);
+        }
+
+        .outcome-option label {
+            color: var(--grey-light);
+            cursor: pointer;
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .games-main {
+                padding: 0 15px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .wager-participants {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .vs-divider {
+                margin: 0;
+            }
+
+            .outcome-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="games-container">
+        <!-- Header -->
+        <header class="games-header">
+            <div class="header-content">
+                <a href="/dashboard.html" class="back-button">
+                    ← Back to Dashboard
+                </a>
+                <h1 class="logo">TÉTÉ</h1>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="games-main">
+            <h1 class="page-title">My Games</h1>
+            <p class="page-subtitle">Track your active wagers and view your betting history</p>
+
+            <!-- Stats Overview -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalWagers">0</div>
+                    <div class="stat-label">Total Wagers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="activeWagers">0</div>
+                    <div class="stat-label">Active Games</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="winRate">0%</div>
+                    <div class="stat-label">Win Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalEarnings">₦0</div>
+                    <div class="stat-label">Total Earnings</div>
+                </div>
+            </div>
+
+            <!-- Game Tabs -->
+            <div class="game-tabs">
+                <div class="glass-tabs">
+                    <button class="glass-tab active" data-status="active">Active Games</button>
+                    <button class="glass-tab" data-status="pending">Pending Approval</button>
+                    <button class="glass-tab" data-status="completed">Completed</button>
+                    <button class="glass-tab" data-status="all">All Games</button>
+                </div>
+            </div>
+
+            <!-- Wagers List -->
+            <div class="wager-grid" id="wagerGrid">
+                <!-- Wagers will be loaded here -->
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-icon">🎮</div>
+                <h2 class="empty-title">No Games Found</h2>
+                <p class="empty-message">You don't have any games in this category yet</p>
+                <a href="/create-wager.html" class="btn-3d">Create Your First Wager</a>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading-container" id="loadingContainer" style="text-align: center; padding: 40px;">
+                <div class="spinner"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // Check authentication
+        if (!requireCompleteProfile()) {
+            // Redirect handled by requireCompleteProfile
+        }
+
+        let currentStatus = 'active';
+        let currentPage = 1;
+        let myWagers = [];
+        let stats = {
+            total: 0,
+            active: 0,
+            wins: 0,
+            losses: 0,
+            earnings: 0
+        };
+
+        // Tab switching
+        document.querySelectorAll('.glass-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.glass-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                currentStatus = this.dataset.status;
+                currentPage = 1;
+                loadMyWagers();
+            });
+        });
+
+        // Load user's wagers
+        async function loadMyWagers() {
+            document.getElementById('loadingContainer').style.display = 'block';
+            document.getElementById('wagerGrid').innerHTML = '';
+            document.getElementById('emptyState').style.display = 'none';
+
+            try {
+                const response = await teteAPI.getMyWagers(currentStatus === 'all' ? null : currentStatus, currentPage);
+                myWagers = response.wagers;
+                
+                // Update stats
+                if (response.stats) {
+                    stats = response.stats;
+                    updateStats();
+                }
+
+                if (myWagers.length === 0) {
+                    document.getElementById('loadingContainer').style.display = 'none';
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+
+                displayWagers();
+                document.getElementById('loadingContainer').style.display = 'none';
+            } catch (error) {
+                console.error('Failed to load wagers:', error);
+                document.getElementById('loadingContainer').style.display = 'none';
+                showToast('Failed to load games', 'error');
+            }
+        }
+
+        // Update stats display
+        function updateStats() {
+            document.getElementById('totalWagers').textContent = stats.total || 0;
+            document.getElementById('activeWagers').textContent = stats.active || 0;
+            
+            const winRate = stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0;
+            document.getElementById('winRate').textContent = winRate + '%';
+            
+            document.getElementById('totalEarnings').textContent = formatCurrency(stats.earnings || 0);
+        }
+
+        // Display wagers
+        function displayWagers() {
+            const grid = document.getElementById('wagerGrid');
+            
+            grid.innerHTML = myWagers.map(wager => {
+                const isCreator = wager.creator_id === teteAPI.user.id;
+                const opponent = isCreator ? wager.joiner : wager.creator;
+                const statusClass = getStatusClass(wager.status);
+                const canSubmitOutcome = canSubmitOutcome(wager);
+                
+                return `
+                    <div class="wager-card" onclick="viewWagerDetails('${wager.id}')">
+                        <div class="wager-header">
+                            <div>
+                                <h3 class="wager-title">${wager.title}</h3>
+                                <div class="wager-meta">
+                                    <span class="wager-meta-item">
+                                        <span class="tier-badge ${wager.tier}">${wager.tier.toUpperCase()}</span>
+                                    </span>
+                                    <span class="wager-meta-item">
+                                        💰 ${formatCurrency(wager.amount)}
+                                    </span>
+                                    <span class="wager-meta-item">
+                                        📁 ${wager.category.name}
+                                    </span>
+                                </div>
+                            </div>
+                            <span class="wager-status ${statusClass}">${wager.status}</span>
+                        </div>
+
+                        ${wager.status === 'in_progress' ? `
+                            <div class="wager-countdown">
+                                <div class="countdown-label">
+                                    ${new Date(wager.decision_datetime) > new Date() ? 'Outcome available in:' : 'Submit outcome within:'}
+                                </div>
+                                <div class="countdown-timer" id="countdown-${wager.id}">
+                                    Calculating...
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="wager-participants">
+                            <div class="participant">
+                                <div class="participant-label">Creator</div>
+                                <div class="participant-name">
+                                    ${isCreator ? 'You' : wager.creator.username}
+                                </div>
+                            </div>
+                            <div class="vs-divider">VS</div>
+                            <div class="participant">
+                                <div class="participant-label">Challenger</div>
+                                <div class="participant-name">
+                                    ${opponent ? (isCreator ? opponent.username : 'You') : 'Waiting...'}
+                                </div>
+                            </div>
+                        </div>
+
+                        ${renderWagerActions(wager, isCreator, canSubmitOutcome)}
+                    </div>
+                `;
+            }).join('');
+
+            // Initialize countdowns
+            myWagers.forEach(wager => {
+                if (wager.status === 'in_progress') {
+                    initializeWagerCountdown(wager);
+                }
+            });
+        }
+
+        // Get status class
+        function getStatusClass(status) {
+            const statusMap = {
+                'open': 'status-pending',
+                'pending_approval': 'status-pending',
+                'in_progress': 'status-active',
+                'pending_outcome': 'status-active',
+                'in_dispute': 'status-dispute',
+                'completed': 'status-completed',
+                'cancelled': 'status-completed'
+            };
+            return statusMap[status] || 'status-pending';
+        }
+
+        // Check if user can submit outcome
+        function canSubmitOutcome(wager) {
+            if (wager.status !== 'in_progress' && wager.status !== 'pending_outcome') return false;
+            
+            const now = new Date();
+            const decisionTime = new Date(wager.decision_datetime);
+            const deadlineTime = new Date(decisionTime.getTime() + 24 * 60 * 60 * 1000);
+            
+            // Check if decision time has passed but deadline hasn't
+            if (now < decisionTime || now > deadlineTime) return false;
+            
+            // Check if user already submitted
+            const isCreator = wager.creator_id === teteAPI.user.id;
+            if (isCreator && wager.creator_outcome) return false;
+            if (!isCreator && wager.joiner_outcome) return false;
+            
+            return true;
+        }
+
+        // Render wager actions based on status
+        function renderWagerActions(wager, isCreator, canSubmitOutcome) {
+            if (wager.status === 'pending_approval' && isCreator) {
+                return `
+                    <div class="wager-actions">
+                        <button class="action-button" onclick="event.stopPropagation(); viewApproval('${wager.id}')">
+                            View & Approve Challenger
+                        </button>
+                    </div>
+                `;
+            }
+
+            if (canSubmitOutcome) {
+                if (wager.challenge_type === 'type1') {
+                    return `
+                        <div class="outcome-buttons">
+                            <button class="outcome-button win" onclick="event.stopPropagation(); submitType1Outcome('${wager.id}', 'win')">
+                                I WIN
+                            </button>
+                            <button class="outcome-button lose" onclick="event.stopPropagation(); submitType1Outcome('${wager.id}', 'lose')">
+                                I LOSE
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="wager-actions">
+                            <button class="action-button primary" onclick="event.stopPropagation(); showType2OutcomeForm('${wager.id}')">
+                                Submit Outcome
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+
+            if (wager.status === 'in_dispute') {
+                return `
+                    <div class="wager-actions">
+                        <button class="action-button" disabled>
+                            Oracle Reviewing...
+                        </button>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="wager-actions">
+                    <a href="/wager-details.html?id=${wager.id}" class="action-button" onclick="event.stopPropagation(); return true;">
+                        View Details
+                    </a>
+                </div>
+            `;
+        }
+
+        // Initialize countdown for a wager
+        function initializeWagerCountdown(wager) {
+            const element = document.getElementById(`countdown-${wager.id}`);
+            if (!element) return;
+
+            const now = new Date();
+            const decisionTime = new Date(wager.decision_datetime);
+            const deadlineTime = new Date(decisionTime.getTime() + 24 * 60 * 60 * 1000);
+
+            let targetTime = decisionTime;
+            if (now > decisionTime) {
+                targetTime = deadlineTime;
+                element.parentElement.querySelector('.countdown-label').textContent = 'Submit outcome within:';
+            }
+
+            const interval = initializeCountdown(element, targetTime);
+            
+            // Store interval for cleanup
+            element.dataset.interval = interval;
+        }
+
+        // Submit Type 1 outcome
+        async function submitType1Outcome(wagerId, outcome) {
+            if (!confirm(`Are you sure you want to submit "${outcome === 'win' ? 'I WIN' : 'I LOSE'}"? This cannot be changed.`)) {
+                return;
+            }
+
+            try {
+                const outcomeData = {
+                    type: 'type1',
+                    outcome: outcome
+                };
+
+                const response = await teteAPI.submitOutcome(wagerId, outcomeData);
+                showToast('Outcome submitted successfully!', 'success');
+                
+                // Reload wagers
+                loadMyWagers();
+            } catch (error) {
+                showToast(error.message || 'Failed to submit outcome', 'error');
+            }
+        }
+
+        // Show Type 2 outcome form
+        function showType2OutcomeForm(wagerId) {
+            // For now, redirect to wager details page
+            window.location.href = `/wager-details.html?id=${wagerId}#submit-outcome`;
+        }
+
+        // View approval
+        function viewApproval(wagerId) {
+            window.location.href = `/wager-details.html?id=${wagerId}#approval`;
+        }
+
+        // View wager details
+        function viewWagerDetails(wagerId) {
+            window.location.href = `/wager-details.html?id=${wagerId}`;
+        }
+
+        // Initialize
+        loadMyWagers();
+
+        // Refresh every 30 seconds for live updates
+        setInterval(() => {
+            if (currentStatus === 'active' || currentStatus === 'pending_approval') {
+                loadMyWagers();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

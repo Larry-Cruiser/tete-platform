@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tété - Premium P2P Betting Platform | Players Win, We Just Host</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Landing Page Specific Styles */
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at 20% 50%, rgba(231,76,60,0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(243,156,18,0.05) 0%, transparent 50%),
+                        var(--black);
+        }
+
+        .hero-content {
+            text-align: center;
+            z-index: 1;
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        .hero-title {
+            font-size: 5em;
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, var(--primary), var(--burnt-orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(231,76,60,0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .hero-subtitle {
+            font-size: 1.8em;
+            color: var(--grey-light);
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .stats-section {
+            padding: 80px 20px;
+            background: linear-gradient(180deg, var(--charcoal), var(--charcoal-dark));
+        }
+
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255,215,0,0.05);
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold);
+            box-shadow: 0 10px 30px rgba(255,215,0,0.2);
+        }
+
+        .stat-number {
+            font-size: 3em;
+            font-weight: 800;
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+
+        .stat-label {
+            font-size: 1.2em;
+            color: var(--grey-light);
+            margin-top: 10px;
+        }
+
+        .features-section {
+            padding: 80px 20px;
+        }
+
+        .features-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-card {
+            padding: 40px;
+            background: linear-gradient(145deg, rgba(26,26,26,0.9), rgba(15,15,15,0.9));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--primary), var(--burnt-orange), var(--gold));
+            border-radius: 20px;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover::before {
+            opacity: 0.3;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .feature-title {
+            font-size: 1.6em;
+            color: var(--white);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .feature-description {
+            color: var(--grey-light);
+            line-height: 1.6;
+        }
+
+        /* Toast Styles */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(15,15,15,0.95);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            padding: 15px 20px;
+            max-width: 350px;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 9999;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast-success { border-color: var(--green); }
+        .toast-error { border-color: var(--red); }
+        .toast-warning { border-color: var(--burnt-orange); }
+        .toast-info { border-color: var(--gold); }
+
+        /* Floating Elements */
+        .floating-element {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .floating-element:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            font-size: 100px;
+            animation-delay: 0s;
+        }
+
+        .floating-element:nth-child(2) {
+            top: 60%;
+            right: 10%;
+            font-size: 80px;
+            animation-delay: 5s;
+        }
+
+        .floating-element:nth-child(3) {
+            bottom: 20%;
+            left: 50%;
+            font-size: 120px;
+            animation-delay: 10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            33% { transform: translateY(-30px) rotate(120deg); }
+            66% { transform: translateY(30px) rotate(240deg); }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 3em;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.2em;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn-3d {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="logo">TÉTÉ</a>
+            <div class="nav-buttons">
+                <button class="btn-3d" onclick="window.location.href='/login.html'">Login</button>
+                <button class="btn-3d gold" onclick="window.location.href='/register.html'">Sign Up</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">TÉTÉ</h1>
+            <p class="hero-subtitle">Players Win, We Just Host!</p>
+            <p style="color: var(--grey); font-size: 1.2em; margin-bottom: 30px;">
+                Nigeria's Premium P2P Betting Platform
+            </p>
+            
+            <div class="glass-tabs" style="max-width: 600px; margin: 0 auto 40px;">
+                <button class="glass-tab active">Football</button>
+                <button class="glass-tab">Entertainment</button>
+                <button class="glass-tab">Politics</button>
+                <button class="glass-tab">Custom</button>
+            </div>
+            
+            <div class="hero-buttons">
+                <button class="btn-3d gold" onclick="window.location.href='/register.html'">
+                    Start Winning Now
+                </button>
+                <button class="btn-3d green" onclick="scrollToFeatures()">
+                    How It Works
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-number" id="totalUsers">0</div>
+                <div class="stat-label">Active Players</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeWagers">0</div>
+                <div class="stat-label">Live Wagers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalVolume">₦0</div>
+                <div class="stat-label">Total Volume</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">10%</div>
+                <div class="stat-label">Low Commission</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <h2 style="text-align: center; font-size: 3em; margin-bottom: 60px; color: var(--gold);">
+            Why Choose Tété?
+        </h2>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3 class="feature-title">Secure Escrow</h3>
+                <p class="feature-description">
+                    Your funds are safely held in escrow until the wager is settled. 
+                    Bank-level security with Paystack integration.
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <h3 class="feature-title">Fair Play Oracle</h3>
+                <p class="feature-description">
+                    Disputes? Our Oracle system ensures fair resolution. 
+                    Transparent, unbiased, and quick decisions.
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <h3 class="feature-title">5 Betting Tiers</h3>
+                <p class="feature-description">
+                    From ₦200 Standard to ₦500,000 Odogwu tier. 
+                    Play at your comfort level with style.
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <h3 class="feature-title">Instant Payouts</h3>
+                <p class="feature-description">
+                    Winners get paid immediately after outcome confirmation. 
+                    No delays, no stories.
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <h3 class="feature-title">Live Chat</h3>
+                <p class="feature-description">
+                    Banter with your opponent in real-time. 
+                    Make it personal, make it fun!
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <h3 class="feature-title">Mobile First</h3>
+                <p class="feature-description">
+                    Play anywhere, anytime. Our platform works 
+                    flawlessly on all devices.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section style="padding: 100px 20px; background: linear-gradient(135deg, rgba(255,69,0,0.1), rgba(255,215,0,0.1));">
+        <div style="text-align: center; max-width: 800px; margin: 0 auto;">
+            <h2 style="font-size: 3em; margin-bottom: 20px; color: var(--gold);">
+                Ready to Start Winning?
+            </h2>
+            <p style="font-size: 1.3em; color: var(--grey-light); margin-bottom: 40px;">
+                Join thousands of players already winning on Tété. 
+                Your first wager is just a click away!
+            </p>
+            <button class="btn-3d gold" style="font-size: 1.2em; padding: 20px 60px;" 
+                    onclick="window.location.href='/register.html'">
+                Create Free Account
+            </button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="background: var(--charcoal-dark); padding: 40px 20px; text-align: center; border-top: 1px solid var(--gold);">
+        <p style="color: var(--grey);">
+            © 2025 Game Headquarters Nigeria Limited. All rights reserved.
+        </p>
+        <p style="color: var(--grey); margin-top: 10px;">
+            Licensed and Regulated by the National Lottery Regulatory Commission
+        </p>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // Smooth scroll
+        function scrollToFeatures() {
+            document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Animate stats on load
+        async function loadStats() {
+            try {
+                const { stats } = await teteAPI.getStats();
+                
+                // Animate numbers
+                animateNumber('totalUsers', stats.totalUsers);
+                animateNumber('activeWagers', stats.activeWagers);
+                document.getElementById('totalVolume').textContent = formatCurrency(stats.totalVolume);
+                
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        function animateNumber(id, target) {
+            const element = document.getElementById(id);
+            const duration = 2000;
+            const step = target / (duration / 16);
+            let current = 0;
+            
+            const timer = setInterval(() => {
+                current += step;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                element.textContent = Math.floor(current).toLocaleString();
+            }, 16);
+        }
+
+        // Tab switching
+        document.querySelectorAll('.glass-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.glass-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Load stats on page load
+        loadStats();
+    </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - Tété Platform</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .verify-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: var(--charcoal);
+        }
+        
+        .verify-card {
+            max-width: 500px;
+            text-align: center;
+            padding: 50px;
+            background: linear-gradient(145deg, rgba(42,42,42,0.95), rgba(26,26,26,0.95));
+            border: 2px solid rgba(255,215,0,0.3);
+            border-radius: 25px;
+        }
+        
+        .verify-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        
+        .verify-title {
+            color: var(--gold);
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+        
+        .verify-message {
+            color: var(--grey-light);
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="verify-container">
+        <div class="verify-card">
+            <div class="verify-icon">✉️</div>
+            <h1 class="verify-title">Verifying Your Email...</h1>
+            <p class="verify-message">Please wait while we verify your email address.</p>
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // Get token from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        if (!token) {
+            showToast('Invalid verification link', 'error');
+            setTimeout(() => {
+                window.location.href = '/login.html';
+            }, 2000);
+        } else {
+            // Verify the email
+            (async () => {
+                try {
+                    const response = await teteAPI.verifyEmail(token);
+                    
+                    document.querySelector('.verify-icon').textContent = '✅';
+                    document.querySelector('.verify-title').textContent = 'Email Verified!';
+                    document.querySelector('.verify-message').textContent = response.message;
+                    document.querySelector('.spinner').style.display = 'none';
+                    
+                    showToast('Email verified successfully!', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 3000);
+                    
+                } catch (error) {
+                    document.querySelector('.verify-icon').textContent = '❌';
+                    document.querySelector('.verify-title').textContent = 'Verification Failed';
+                    document.querySelector('.verify-message').textContent = error.message || 'Invalid or expired token';
+                    document.querySelector('.spinner').style.display = 'none';
+                    
+                    showToast(error.message || 'Verification failed', 'error');
+                }
+            })();
+        }
+    </script>
+</body>
+</html>

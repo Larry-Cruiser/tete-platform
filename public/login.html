@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Tété Platform</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: radial-gradient(circle at 30% 50%, rgba(255,215,0,0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(255,69,0,0.1) 0%, transparent 50%),
+                        var(--charcoal);
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 450px;
+            background: linear-gradient(145deg, rgba(42,42,42,0.95), rgba(26,26,26,0.95));
+            border: 2px solid rgba(255,215,0,0.3);
+            border-radius: 25px;
+            padding: 50px 40px;
+            box-shadow: 
+                0 20px 60px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(
+                circle at center,
+                rgba(255,215,0,0.15) 0%,
+                transparent 70%
+            );
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .auth-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .auth-logo {
+            font-size: 3em;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 30px rgba(255,215,0,0.5);
+            margin-bottom: 10px;
+        }
+
+        .auth-subtitle {
+            color: var(--grey-light);
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-input {
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(255,215,0,0.2);
+            padding: 18px 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            background: rgba(255,255,255,0.05);
+            border-color: var(--gold);
+            box-shadow: 
+                0 0 0 3px rgba(255,215,0,0.1),
+                inset 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .password-input-wrapper {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--grey);
+            cursor: pointer;
+            font-size: 20px;
+            transition: color 0.3s ease;
+        }
+
+        .toggle-password:hover {
+            color: var(--gold);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--grey-light);
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--gold);
+        }
+
+        .forgot-link {
+            color: var(--gold);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .forgot-link:hover {
+            text-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+
+        .auth-divider {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: rgba(255,215,0,0.2);
+        }
+
+        .auth-divider::before {
+            left: 0;
+        }
+
+        .auth-divider::after {
+            right: 0;
+        }
+
+        .auth-divider span {
+            background: var(--charcoal-light);
+            padding: 0 15px;
+            color: var(--grey);
+            position: relative;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 30px;
+            color: var(--grey-light);
+        }
+
+        .auth-footer a {
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .auth-footer a:hover {
+            text-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+
+        .error-message {
+            background: rgba(255,69,0,0.1);
+            border: 1px solid var(--red);
+            color: var(--white);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(26,26,26,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            display: none;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        @media (max-width: 480px) {
+            .auth-card {
+                padding: 40px 25px;
+            }
+            
+            .auth-logo {
+                font-size: 2.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-content">
+                <div class="auth-header">
+                    <h1 class="auth-logo">TÉTÉ</h1>
+                    <p class="auth-subtitle">Welcome back, champion!</p>
+                </div>
+
+                <form id="loginForm">
+                    <div class="error-message" id="errorMessage"></div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email or Username</label>
+                        <input type="text" class="form-input" id="emailOrUsername" 
+                               placeholder="Enter your email or username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" class="form-input" id="password" 
+                                   placeholder="Enter your password" required>
+                            <button type="button" class="toggle-password" onclick="togglePassword()">
+                                <span id="eyeIcon">👁️</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="remember-me">
+                            <input type="checkbox" class="checkbox" id="rememberMe">
+                            <span>Remember me</span>
+                        </label>
+                        <a href="/forgot-password.html" class="forgot-link">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-3d gold" style="width: 100%; font-size: 18px;">
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="auth-divider">
+                    <span>OR</span>
+                </div>
+
+                <button class="btn-3d" style="width: 100%;" onclick="window.location.href='/'">
+                    Back to Home
+                </button>
+
+                <div class="auth-footer">
+                    Don't have an account? 
+                    <a href="/register.html">Create one now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        let passwordVisible = false;
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            
+            passwordVisible = !passwordVisible;
+            passwordInput.type = passwordVisible ? 'text' : 'password';
+            eyeIcon.textContent = passwordVisible ? '🙈' : '👁️';
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.classList.add('show');
+            
+            setTimeout(() => {
+                errorElement.classList.remove('show');
+            }, 5000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').classList.toggle('show', show);
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const emailOrUsername = document.getElementById('emailOrUsername').value.trim();
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            if (!emailOrUsername || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const response = await teteAPI.login({
+                    emailOrUsername,
+                    password
+                });
+                
+                showLoading(false);
+                
+                if (response.message) {
+                    showToast('Login successful! Redirecting...', 'success');
+                    
+                    // Check if profile is complete
+                    if (!response.user.profile_completed) {
+                        setTimeout(() => {
+                            window.location.href = '/complete-profile.html';
+                        }, 1000);
+                    } else {
+                        setTimeout(() => {
+                            window.location.href = '/dashboard.html';
+                        }, 1000);
+                    }
+                }
+            } catch (error) {
+                showLoading(false);
+                showError(error.message || 'Login failed. Please try again.');
+            }
+        });
+
+        // Check if already logged in
+        if (teteAPI.token) {
+            window.location.href = '/dashboard.html';
+        }
+
+        // Add enter key support for password field
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>

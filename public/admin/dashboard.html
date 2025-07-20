@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Tété Platform</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+            background: var(--black);
+        }
+
+        /* Admin Sidebar */
+        .admin-sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, rgba(15,15,15,0.98), rgba(0,0,0,0.98));
+            border-right: 1px solid rgba(231,76,60,0.3);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .admin-logo-section {
+            padding: 30px 20px;
+            border-bottom: 1px solid rgba(231,76,60,0.2);
+            text-align: center;
+        }
+
+        .admin-logo {
+            font-size: 2.5em;
+            font-weight: 900;
+            color: var(--white);
+            letter-spacing: 3px;
+            margin-bottom: 5px;
+        }
+
+        .admin-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: var(--white);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .admin-nav {
+            padding: 20px 0;
+        }
+
+        .admin-nav-item {
+            display: block;
+            padding: 15px 25px;
+            color: var(--grey-light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .admin-nav-item:hover {
+            background: rgba(231,76,60,0.1);
+            color: var(--primary);
+            padding-left: 30px;
+        }
+
+        .admin-nav-item.active {
+            background: rgba(231,76,60,0.15);
+            color: var(--primary);
+            border-left: 4px solid var(--primary);
+        }
+
+        .admin-nav-icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .admin-user-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            border-top: 1px solid rgba(231,76,60,0.2);
+            background: rgba(0,0,0,0.5);
+        }
+
+        .admin-user-name {
+            color: var(--white);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .admin-user-role {
+            color: var(--grey);
+            font-size: 13px;
+        }
+
+        /* Admin Main Content */
+        .admin-main {
+            flex: 1;
+            margin-left: 280px;
+            padding: 30px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .admin-title {
+            font-size: 2.5em;
+            color: var(--white);
+            font-weight: 700;
+        }
+
+        .admin-header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .refresh-button {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(231,76,60,0.3);
+            border-radius: 10px;
+            color: var(--white);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-button:hover {
+            background: rgba(231,76,60,0.1);
+            border-color: var(--primary);
+        }
+
+        /* Stats Grid */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(231,76,60,0.2);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--burnt-orange));
+        }
+
+        .stat-card.gold::before {
+            background: linear-gradient(90deg, var(--gold), var(--gold-light));
+        }
+
+        .stat-card.green::before {
+            background: linear-gradient(90deg, var(--green), var(--green-dark));
+        }
+
+        .stat-icon {
+            font-size: 36px;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--grey);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-change {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .stat-change.positive {
+            background: rgba(39,174,96,0.2);
+            color: var(--green);
+        }
+
+        .stat-change.negative {
+            background: rgba(231,76,60,0.2);
+            color: var(--primary);
+        }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .chart-title {
+            font-size: 1.3em;
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        .chart-period {
+            display: flex;
+            gap: 10px;
+        }
+
+        .period-button {
+            padding: 5px 15px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            color: var(--grey);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .period-button.active {
+            background: rgba(231,76,60,0.2);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .chart-placeholder {
+            height: 300px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--grey);
+        }
+
+        /* Recent Activity */
+        .activity-section {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .activity-title {
+            font-size: 1.3em;
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover {
+            background: rgba(255,255,255,0.05);
+            transform: translateX(5px);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .activity-icon.user {
+            background: rgba(52,152,219,0.2);
+            color: #3498DB;
+        }
+
+        .activity-icon.wager {
+            background: rgba(231,76,60,0.2);
+            color: var(--primary);
+        }
+
+        .activity-icon.money {
+            background: rgba(39,174,96,0.2);
+            color: var(--green);
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-text {
+            color: var(--white);
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .activity-time {
+            color: var(--grey);
+            font-size: 13px;
+        }
+
+        .activity-amount {
+            font-weight: 600;
+            color: var(--gold);
+        }
+
+        .logout-button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            background: rgba(231,76,60,0.2);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .logout-button:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        @media (max-width: 1024px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .admin-sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .admin-main {
+                margin-left: 0;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            padding: 10px;
+            background: var(--primary);
+            border: none;
+            border-radius: 10px;
+            color: var(--white);
+            cursor: pointer;
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Admin Sidebar -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="admin-logo-section">
+                <h1 class="admin-logo">TÉTÉ</h1>
+                <span class="admin-badge">Admin Portal</span>
+            </div>
+
+            <nav class="admin-nav">
+                <a href="/admin/dashboard.html" class="admin-nav-item active">
+                    <span class="admin-nav-icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="/admin/users.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">👥</span>
+                    Users
+                </a>
+                <a href="/admin/wagers.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">🎮</span>
+                    Wagers
+                </a>
+                <a href="/admin/disputes.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">⚖️</span>
+                    Disputes (Oracle)
+                </a>
+                <a href="/admin/finance.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">💰</span>
+                    Finance
+                </a>
+                <a href="/admin/reports.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">📈</span>
+                    Reports
+                </a>
+                <a href="/admin/settings.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">⚙️</span>
+                    Settings
+                </a>
+            </nav>
+
+            <div class="admin-user-info">
+                <div class="admin-user-name" id="adminName">Admin User</div>
+                <div class="admin-user-role">Super Admin</div>
+                <button class="logout-button" onclick="adminLogout()">
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <div class="admin-header">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <h1 class="admin-title">Dashboard Overview</h1>
+                <div class="admin-header-actions">
+                    <span style="color: var(--grey); font-size: 14px;" id="lastUpdate">Last update: Just now</span>
+                    <button class="refresh-button" onclick="refreshDashboard()">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value" id="totalUsers">2,847</div>
+                    <div class="stat-label">Total Users</div>
+                    <span class="stat-change positive">+12.5%</span>
+                </div>
+
+                <div class="stat-card gold">
+                    <div class="stat-icon">🎮</div>
+                    <div class="stat-value" id="activeWagers">342</div>
+                    <div class="stat-label">Active Wagers</div>
+                    <span class="stat-change positive">+8.3%</span>
+                </div>
+
+                <div class="stat-card green">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value" id="totalRevenue">₦5.2M</div>
+                    <div class="stat-label">Total Revenue</div>
+                    <span class="stat-change positive">+23.7%</span>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">⚖️</div>
+                    <div class="stat-value" id="pendingDisputes">7</div>
+                    <div class="stat-label">Pending Disputes</div>
+                    <span class="stat-change negative">+2</span>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Revenue Trend</h3>
+                        <div class="chart-period">
+                            <button class="period-button">Day</button>
+                            <button class="period-button active">Week</button>
+                            <button class="period-button">Month</button>
+                        </div>
+                    </div>
+                    <div class="chart-placeholder">
+                        📊 Revenue Chart Visualization
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">User Growth</h3>
+                        <div class="chart-period">
+                            <button class="period-button">Day</button>
+                            <button class="period-button active">Week</button>
+                            <button class="period-button">Month</button>
+                        </div>
+                    </div>
+                    <div class="chart-placeholder">
+                        📈 User Growth Chart
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="activity-section">
+                <div class="activity-header">
+                    <h3 class="activity-title">Recent Platform Activity</h3>
+                    <a href="/admin/activity.html" style="color: var(--primary); text-decoration: none;">
+                        View All →
+                    </a>
+                </div>
+
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-icon user">👤</div>
+                        <div class="activity-details">
+                            <div class="activity-text">New user registered: <strong>ChampBet23</strong></div>
+                            <div class="activity-time">2 minutes ago</div>
+                        </div>
+                    </div>
+
+                    <div class="activity-item">
+                        <div class="activity-icon wager">🎯</div>
+                        <div class="activity-details">
+                            <div class="activity-text">High-value wager created: <span class="activity-amount">₦50,000</span></div>
+                            <div class="activity-time">5 minutes ago</div>
+                        </div>
+                    </div>
+
+                    <div class="activity-item">
+                        <div class="activity-icon money">💸</div>
+                        <div class="activity-details">
+                            <div class="activity-text">Withdrawal processed: <span class="activity-amount">₦125,000</span></div>
+                            <div class="activity-time">12 minutes ago</div>
+                        </div>
+                    </div>
+
+                    <div class="activity-item">
+                        <div class="activity-icon wager">⚡</div>
+                        <div class="activity-details">
+                            <div class="activity-text">Dispute resolved: Wager #W2847</div>
+                            <div class="activity-time">18 minutes ago</div>
+                        </div>
+                    </div>
+
+                    <div class="activity-item">
+                        <div class="activity-icon user">🔒</div>
+                        <div class="activity-details">
+                            <div class="activity-text">User account suspended: Violation of terms</div>
+                            <div class="activity-time">25 minutes ago</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Check admin authentication
+        function checkAdminAuth() {
+            const adminToken = localStorage.getItem('tete_admin_token');
+            if (!adminToken) {
+                window.location.href = '/admin/login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Initialize
+        if (!checkAdminAuth()) {
+            // Redirect handled above
+        }
+
+        // Load admin info
+        const adminUser = JSON.parse(localStorage.getItem('tete_admin_user') || '{}');
+        document.getElementById('adminName').textContent = adminUser.name || 'Admin User';
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            document.getElementById('adminSidebar').classList.toggle('mobile-open');
+        }
+
+        // Refresh dashboard
+        function refreshDashboard() {
+            const button = event.target;
+            button.innerHTML = '⏳ Refreshing...';
+            button.disabled = true;
+
+            // Simulate data refresh
+            setTimeout(() => {
+                // Update numbers with random changes
+                updateStats();
+                
+                button.innerHTML = '🔄 Refresh';
+                button.disabled = false;
+                
+                document.getElementById('lastUpdate').textContent = 'Last update: Just now';
+            }, 1500);
+        }
+
+        // Update stats with animation
+        function updateStats() {
+            // Simulate real-time updates
+            const stats = {
+                totalUsers: Math.floor(2847 + Math.random() * 50),
+                activeWagers: Math.floor(342 + Math.random() * 20),
+                totalRevenue: (5.2 + Math.random() * 0.3).toFixed(1),
+                pendingDisputes: Math.floor(7 + Math.random() * 3)
+            };
+
+            animateNumber('totalUsers', stats.totalUsers);
+            animateNumber('activeWagers', stats.activeWagers);
+            document.getElementById('totalRevenue').textContent = `₦${stats.totalRevenue}M`;
+            animateNumber('pendingDisputes', stats.pendingDisputes);
+        }
+
+        // Animate number changes
+        function animateNumber(elementId, newValue) {
+            const element = document.getElementById(elementId);
+            const currentValue = parseInt(element.textContent.replace(/[^0-9]/g, ''));
+            const difference = newValue - currentValue;
+            const steps = 20;
+            const stepValue = difference / steps;
+            let step = 0;
+
+            const interval = setInterval(() => {
+                step++;
+                if (step === steps) {
+                    element.textContent = newValue.toLocaleString();
+                    clearInterval(interval);
+                } else {
+                    element.textContent = Math.floor(currentValue + stepValue * step).toLocaleString();
+                }
+            }, 50);
+        }
+
+        // Admin logout
+        function adminLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('tete_admin_token');
+                localStorage.removeItem('tete_admin_user');
+                window.location.href = '/admin/login.html';
+            }
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            updateStats();
+            document.getElementById('lastUpdate').textContent = 'Last update: Just now';
+        }, 30000);
+
+        // Set active nav item
+        document.querySelectorAll('.admin-nav-item').forEach(item => {
+            if (item.href === window.location.href) {
+                item.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

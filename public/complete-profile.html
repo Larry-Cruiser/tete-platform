@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Profile - Tété Platform</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .profile-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: radial-gradient(circle at 30% 50%, rgba(204,85,0,0.1) 0%, transparent 50%),
+                        var(--charcoal-dark);
+        }
+
+        .profile-card {
+            width: 100%;
+            max-width: 600px;
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(10,10,10,0.95));
+            border: 2px solid rgba(204,85,0,0.3);
+            border-radius: 25px;
+            padding: 50px 40px;
+            box-shadow: 
+                0 20px 60px rgba(0,0,0,0.7),
+                inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .profile-title {
+            font-size: 2.5em;
+            color: var(--primary-light);
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(204,85,0,0.3);
+        }
+
+        .profile-subtitle {
+            color: var(--grey-light);
+            font-size: 1.1em;
+        }
+
+        .progress-indicator {
+            background: rgba(255,255,255,0.1);
+            height: 8px;
+            border-radius: 4px;
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            width: 70%;
+            transition: width 0.3s ease;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: var(--primary);
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(204,85,0,0.2);
+        }
+
+        .info-box {
+            background: rgba(204,85,0,0.1);
+            border: 1px solid rgba(204,85,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            color: var(--grey-light);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .bank-select {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(204,85,0,0.2);
+            border-radius: 10px;
+            color: var(--white);
+            font-size: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bank-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .bank-select option {
+            background: var(--charcoal);
+            color: var(--white);
+        }
+
+        .helper-text {
+            color: var(--grey);
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .bio-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 15px 20px;
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(204,85,0,0.2);
+            border-radius: 10px;
+            color: var(--white);
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .bio-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .avatar-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .avatar-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--white);
+            margin: 0 auto 20px;
+            box-shadow: 0 0 30px rgba(204,85,0,0.3);
+        }
+
+        .skip-link {
+            color: var(--grey);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .skip-link:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <div class="profile-card">
+            <div class="profile-header">
+                <h1 class="profile-title">Complete Your Profile</h1>
+                <p class="profile-subtitle">One more step to start winning!</p>
+            </div>
+
+            <div class="progress-indicator">
+                <div class="progress-fill"></div>
+            </div>
+
+            <form id="profileForm">
+                <!-- Personal Information -->
+                <div class="form-section">
+                    <h2 class="section-title">Personal Information</h2>
+                    
+                    <div class="avatar-section">
+                        <div class="avatar-preview" id="avatarPreview">U</div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">First Name*</label>
+                            <input type="text" class="form-input" id="firstName" 
+                                   placeholder="Enter your first name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Last Name*</label>
+                            <input type="text" class="form-input" id="lastName" 
+                                   placeholder="Enter your last name" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Middle Name (Optional)</label>
+                        <input type="text" class="form-input" id="middleName" 
+                               placeholder="Enter your middle name">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Bio (Optional)</label>
+                        <textarea class="bio-textarea" id="bio" 
+                                  placeholder="Tell us a bit about yourself..." 
+                                  maxlength="200"></textarea>
+                        <p class="helper-text">Maximum 200 characters</p>
+                    </div>
+                </div>
+
+                <!-- Banking Information -->
+                <div class="form-section">
+                    <h2 class="section-title">Banking Information</h2>
+                    
+                    <div class="info-box">
+                        <p>We need your bank details for withdrawals. This must match the name on your bank account.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Select Your Bank*</label>
+                        <select class="bank-select" id="bankName" required>
+                            <option value="">-- Select a bank --</option>
+                            <option value="access">Access Bank</option>
+                            <option value="gtb">Guaranty Trust Bank (GTB)</option>
+                            <option value="uba">United Bank for Africa (UBA)</option>
+                            <option value="zenith">Zenith Bank</option>
+                            <option value="first">First Bank of Nigeria</option>
+                            <option value="fcmb">First City Monument Bank (FCMB)</option>
+                            <option value="stanbic">Stanbic IBTC Bank</option>
+                            <option value="sterling">Sterling Bank</option>
+                            <option value="wema">Wema Bank</option>
+                            <option value="kuda">Kuda Bank</option>
+                            <option value="opay">OPay</option>
+                            <option value="palmpay">PalmPay</option>
+                            <!-- Add more banks as needed -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Account Number (NUBAN)*</label>
+                        <input type="text" class="form-input" id="accountNumber" 
+                               placeholder="Enter your 10-digit account number" 
+                               maxlength="10" pattern="[0-9]{10}" required>
+                        <p class="helper-text">Must be a valid 10-digit NUBAN account number</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Account Name*</label>
+                        <input type="text" class="form-input" id="accountName" 
+                               placeholder="Enter your account name" required>
+                        <p class="helper-text" style="color: var(--gold); font-size: 13px;">
+                            Please ensure this matches the name on your bank account for smooth withdrawals
+                        </p>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-3d" style="width: 100%; margin-bottom: 20px;">
+                    Complete Profile & Start Playing
+                </button>
+
+                <div style="text-align: center;">
+                    <a href="/dashboard.html" class="skip-link">Skip for now (you can complete this later)</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // Check authentication
+        if (!requireAuth()) {
+            // Redirect handled by requireAuth
+        }
+
+        // Update avatar preview
+        function updateAvatar() {
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const avatarPreview = document.getElementById('avatarPreview');
+            
+            if (firstName || lastName) {
+                const initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+                avatarPreview.textContent = initials || 'U';
+            }
+        }
+
+        document.getElementById('firstName').addEventListener('input', updateAvatar);
+        document.getElementById('lastName').addEventListener('input', updateAvatar);
+
+        // Format account number
+        document.getElementById('accountNumber').addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
+
+        // Handle form submission
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const profileData = {
+                first_name: document.getElementById('firstName').value.trim(),
+                last_name: document.getElementById('lastName').value.trim(),
+                middle_name: document.getElementById('middleName').value.trim() || null,
+                bio: document.getElementById('bio').value.trim() || null,
+                bank_name: document.getElementById('bankName').value,
+                bank_account_number: document.getElementById('accountNumber').value,
+                bank_account_name: document.getElementById('accountName').value.trim(),
+                profile_completed: true
+            };
+
+            // Validate account number
+            if (profileData.bank_account_number.length !== 10) {
+                showToast('Account number must be exactly 10 digits', 'error');
+                return;
+            }
+
+            document.getElementById('loadingOverlay').classList.add('show');
+
+            try {
+                const response = await teteAPI.updateProfile(profileData);
+                
+                document.getElementById('loadingOverlay').classList.remove('show');
+                
+                if (response.message) {
+                    showToast('Profile completed successfully!', 'success');
+                    
+                    // Update progress bar
+                    document.querySelector('.progress-fill').style.width = '100%';
+                    
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 1500);
+                }
+            } catch (error) {
+                document.getElementById('loadingOverlay').classList.remove('show');
+                showToast(error.message || 'Failed to update profile', 'error');
+            }
+        });
+
+        // Pre-fill user data if available
+        if (teteAPI.user) {
+            const user = teteAPI.user;
+            document.getElementById('avatarPreview').textContent = user.username.charAt(0).toUpperCase();
+            
+            // Pre-fill if data exists
+            if (user.first_name) document.getElementById('firstName').value = user.first_name;
+            if (user.last_name) document.getElementById('lastName').value = user.last_name;
+            if (user.middle_name) document.getElementById('middleName').value = user.middle_name;
+            if (user.bio) document.getElementById('bio').value = user.bio;
+            if (user.bank_name) document.getElementById('bankName').value = user.bank_name;
+            if (user.bank_account_number) document.getElementById('accountNumber').value = user.bank_account_number;
+            if (user.bank_account_name) document.getElementById('accountName').value = user.bank_account_name;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Wager - Tété Platform</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .create-container {
+            min-height: 100vh;
+            background: var(--black);
+            padding-bottom: 100px;
+        }
+
+        .create-header {
+            background: linear-gradient(180deg, rgba(15,15,15,0.98), rgba(0,0,0,0.98));
+            border-bottom: 1px solid rgba(231,76,60,0.3);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-button {
+            color: var(--grey-light);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .back-button:hover {
+            color: var(--primary);
+        }
+
+        .create-main {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            font-size: 2.5em;
+            color: var(--white);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .page-subtitle {
+            color: var(--grey);
+            font-size: 1.1em;
+            margin-bottom: 40px;
+        }
+
+        .form-card {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--burnt-orange), var(--gold));
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: var(--white);
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .amount-input-group {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .amount-input {
+            width: 100%;
+            padding: 20px 20px 20px 40px;
+            font-size: 24px;
+            font-weight: 600;
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(231,76,60,0.3);
+            border-radius: 15px;
+            color: var(--white);
+            transition: all 0.3s ease;
+        }
+
+        .amount-input:focus {
+            border-color: var(--primary);
+            background: rgba(255,255,255,0.05);
+            box-shadow: 0 0 30px rgba(231,76,60,0.2);
+        }
+
+        .currency-symbol {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .tier-display {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(231,76,60,0.1);
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .tier-display.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tier-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .tier-label {
+            color: var(--grey);
+            font-size: 14px;
+        }
+
+        .challenge-types {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .challenge-card {
+            padding: 25px;
+            background: rgba(255,255,255,0.02);
+            border: 2px solid rgba(231,76,60,0.2);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .challenge-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(231,76,60,0.2);
+        }
+
+        .challenge-card.selected {
+            background: rgba(231,76,60,0.1);
+            border-color: var(--primary);
+        }
+
+        .challenge-title {
+            font-size: 1.2em;
+            color: var(--white);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .challenge-description {
+            color: var(--grey);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .category-item {
+            padding: 15px;
+            background: rgba(255,255,255,0.02);
+            border: 2px solid rgba(231,76,60,0.2);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-item:hover {
+            border-color: var(--primary);
+            background: rgba(231,76,60,0.05);
+        }
+
+        .category-item.selected {
+            background: rgba(231,76,60,0.1);
+            border-color: var(--primary);
+        }
+
+        .datetime-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(231,76,60,0.2);
+            border-radius: 10px;
+            color: var(--white);
+            transition: all 0.3s ease;
+        }
+
+        .datetime-input:focus {
+            border-color: var(--primary);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .datetime-help {
+            color: var(--gold);
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .prediction-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(231,76,60,0.2);
+            border-radius: 10px;
+            color: var(--white);
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .prediction-textarea:focus {
+            border-color: var(--primary);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .char-counter {
+            text-align: right;
+            color: var(--grey);
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .terms-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .terms-checkbox input[type="checkbox"] {
+            margin-top: 3px;
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary);
+        }
+
+        .terms-checkbox label {
+            color: var(--grey-light);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .terms-checkbox a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .terms-checkbox a:hover {
+            text-decoration: underline;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .preview-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-content {
+            background: linear-gradient(145deg, rgba(26,26,26,0.98), rgba(15,15,15,0.98));
+            border: 2px solid var(--primary);
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .preview-header {
+            padding: 30px;
+            border-bottom: 1px solid rgba(231,76,60,0.2);
+            text-align: center;
+        }
+
+        .preview-body {
+            padding: 30px;
+        }
+
+        .preview-item {
+            margin-bottom: 20px;
+        }
+
+        .preview-label {
+            color: var(--grey);
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .preview-value {
+            color: var(--white);
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .close-preview {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--grey);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-preview:hover {
+            color: var(--primary);
+        }
+
+        .warning-box {
+            background: rgba(231,76,60,0.1);
+            border: 1px solid rgba(231,76,60,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .warning-box p {
+            color: var(--white);
+            font-size: 14px;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .create-main {
+                padding: 0 15px;
+            }
+
+            .form-card {
+                padding: 25px 20px;
+            }
+
+            .challenge-types {
+                grid-template-columns: 1fr;
+            }
+
+            .category-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .form-actions .btn-3d {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="create-container">
+        <!-- Header -->
+        <header class="create-header">
+            <div class="header-content">
+                <a href="/dashboard.html" class="back-button">
+                    ← Back to Dashboard
+                </a>
+                <h1 class="logo">TÉTÉ</h1>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="create-main">
+            <h1 class="page-title">Create a Wager</h1>
+            <p class="page-subtitle">Set your terms, pick your tier, and wait for a challenger!</p>
+
+            <form id="createWagerForm">
+                <!-- Amount Section -->
+                <div class="form-card">
+                    <h2 class="section-title">Wager Amount</h2>
+                    
+                    <div class="amount-input-group">
+                        <span class="currency-symbol">₦</span>
+                        <input type="number" 
+                               class="amount-input" 
+                               id="amount" 
+                               placeholder="Enter amount (200 - 500,000)"
+                               min="200" 
+                               max="500000" 
+                               required>
+                    </div>
+
+                    <div class="tier-display" id="tierDisplay">
+                        <div class="tier-info">
+                            <span class="tier-label">Your wager will appear in:</span>
+                            <span class="tier-badge" id="tierBadge"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Challenge Type Section -->
+                <div class="form-card">
+                    <h2 class="section-title">Challenge Type</h2>
+                    
+                    <div class="challenge-types">
+                        <div class="challenge-card" data-type="type1">
+                            <h3 class="challenge-title">Type 1: Simple</h3>
+                            <p class="challenge-description">
+                                You make a prediction. Opponent bets against it. 
+                                Simple "I WIN / I LOSE" outcome.
+                            </p>
+                        </div>
+                        
+                        <div class="challenge-card" data-type="type2">
+                            <h3 class="challenge-title">Type 2: Complex</h3>
+                            <p class="challenge-description">
+                                Both make predictions. Each judges both outcomes. 
+                                Requires creator approval.
+                            </p>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="challengeType" name="challengeType" required>
+                </div>
+
+                <!-- Category Section -->
+                <div class="form-card">
+                    <h2 class="section-title">Category</h2>
+                    
+                    <div class="category-grid" id="categoryGrid">
+                        <!-- Categories will be loaded here -->
+                    </div>
+
+                    <div class="form-group" id="subcategoryGroup" style="display: none;">
+                        <label class="form-label">Subcategory</label>
+                        <select class="form-input" id="subcategory">
+                            <option value="">Select subcategory</option>
+                        </select>
+                    </div>
+
+                    <input type="hidden" id="categoryId" name="categoryId" required>
+                </div>
+
+                <!-- Wager Details Section -->
+                <div class="form-card">
+                    <h2 class="section-title">Wager Details</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Wager Title*</label>
+                        <input type="text" 
+                               class="form-input" 
+                               id="title" 
+                               placeholder="e.g., Man United will beat Chelsea"
+                               maxlength="100"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Your Prediction*</label>
+                        <textarea class="prediction-textarea" 
+                                  id="prediction" 
+                                  placeholder="Be specific and measurable. What exactly are you predicting?"
+                                  maxlength="500"
+                                  required></textarea>
+                        <div class="char-counter">
+                            <span id="predictionCount">0</span>/500
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Terms & Conditions*</label>
+                        <div class="warning-box">
+                            <p>Important: Make your conditions VERY CLEAR and MEASURABLE. 
+                               Unclear conditions may result in dispute loss.</p>
+                        </div>
+                        <textarea class="prediction-textarea" 
+                                  id="terms" 
+                                  placeholder="Specify all conditions, rules, and how the outcome will be determined"
+                                  maxlength="1000"
+                                  required></textarea>
+                        <div class="char-counter">
+                            <span id="termsCount">0</span>/1000
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Decision Date & Time*</label>
+                        <input type="datetime-local" 
+                               class="datetime-input" 
+                               id="decisionDateTime" 
+                               required>
+                        <p class="datetime-help">
+                            Must be at least 30 minutes from now and within 7 days
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Agreement Section -->
+                <div class="form-card">
+                    <div class="terms-checkbox">
+                        <input type="checkbox" id="agreeTerms" required>
+                        <label for="agreeTerms">
+                            I understand that my wager amount will be held in escrow until the outcome is decided. 
+                            I agree to the <a href="/terms.html" target="_blank">Terms of Service</a> and 
+                            <a href="/fair-play.html" target="_blank">Fair Play Agreement</a>.
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-3d outline" onclick="previewWager()" style="flex: 1;">
+                            Preview Wager
+                        </button>
+                        <button type="submit" class="btn-3d" style="flex: 1;">
+                            Create Wager
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="preview-modal" id="previewModal">
+        <div class="preview-content">
+            <button class="close-preview" onclick="closePreview()">×</button>
+            
+            <div class="preview-header">
+                <h2 style="color: var(--white); font-size: 24px;">Preview Your Wager</h2>
+                <p style="color: var(--grey); margin-top: 10px;">This is how your wager will appear to others</p>
+            </div>
+            
+            <div class="preview-body" id="previewBody">
+                <!-- Preview content will be inserted here -->
+            </div>
+            
+            <div style="padding: 30px; border-top: 1px solid rgba(231,76,60,0.2);">
+                <button class="btn-3d" style="width: 100%;" onclick="closePreview()">
+                    Looks Good!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // Check authentication
+        if (!requireCompleteProfile()) {
+            // Redirect handled by requireCompleteProfile
+        }
+
+        let selectedChallengeType = null;
+        let selectedCategory = null;
+        let categories = [];
+
+        // Load categories on page load
+        async function loadCategories() {
+            try {
+                const response = await teteAPI.getCategories();
+                categories = response.categories;
+                
+                const grid = document.getElementById('categoryGrid');
+                grid.innerHTML = categories.map(cat => `
+                    <div class="category-item" data-id="${cat.id}" data-slug="${cat.slug}">
+                        <div style="font-weight: 600; color: var(--white);">${cat.name}</div>
+                    </div>
+                `).join('');
+
+                // Add click handlers
+                document.querySelectorAll('.category-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        selectCategory(this);
+                    });
+                });
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+            }
+        }
+
+        // Handle amount input
+        document.getElementById('amount').addEventListener('input', function() {
+            const amount = parseFloat(this.value);
+            const tierDisplay = document.getElementById('tierDisplay');
+            const tierBadge = document.getElementById('tierBadge');
+            
+            if (amount >= 200) {
+                let tier = '';
+                if (amount >= 200 && amount <= 4999) {
+                    tier = 'standard';
+                } else if (amount >= 5000 && amount <= 9999) {
+                    tier = 'oga';
+                } else if (amount >= 10000 && amount <= 20000) {
+                    tier = 'boss';
+                } else if (amount >= 20100 && amount <= 50000) {
+                    tier = 'chairman';
+                } else if (amount >= 50001 && amount <= 500000) {
+                    tier = 'odogwu';
+                }
+                
+                if (tier) {
+                    tierBadge.className = `tier-badge ${tier}`;
+                    tierBadge.textContent = tier.toUpperCase() + ' TIER';
+                    tierDisplay.classList.add('show');
+                }
+            } else {
+                tierDisplay.classList.remove('show');
+            }
+        });
+
+        // Handle challenge type selection
+        document.querySelectorAll('.challenge-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.challenge-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedChallengeType = this.dataset.type;
+                document.getElementById('challengeType').value = selectedChallengeType;
+            });
+        });
+
+        // Handle category selection
+        function selectCategory(element) {
+            document.querySelectorAll('.category-item').forEach(item => item.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            const categoryId = element.dataset.id;
+            selectedCategory = categories.find(cat => cat.id === categoryId);
+            document.getElementById('categoryId').value = categoryId;
+            
+            // Load subcategories if available
+            if (selectedCategory && selectedCategory.wager_subcategories && selectedCategory.wager_subcategories.length > 0) {
+                const subcategoryGroup = document.getElementById('subcategoryGroup');
+                const subcategorySelect = document.getElementById('subcategory');
+                
+                subcategorySelect.innerHTML = '<option value="">Select subcategory</option>' +
+                    selectedCategory.wager_subcategories.map(sub => 
+                        `<option value="${sub.id}">${sub.name}</option>`
+                    ).join('');
+                
+                subcategoryGroup.style.display = 'block';
+            } else {
+                document.getElementById('subcategoryGroup').style.display = 'none';
+            }
+        }
+
+        // Character counters
+        document.getElementById('prediction').addEventListener('input', function() {
+            document.getElementById('predictionCount').textContent = this.value.length;
+        });
+
+        document.getElementById('terms').addEventListener('input', function() {
+            document.getElementById('termsCount').textContent = this.value.length;
+        });
+
+        // Set minimum datetime to 30 minutes from now
+        function setMinDateTime() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() + 30);
+            const minDateTime = now.toISOString().slice(0, 16);
+            
+            const maxDate = new Date();
+            maxDate.setDate(maxDate.getDate() + 7);
+            const maxDateTime = maxDate.toISOString().slice(0, 16);
+            
+            const input = document.getElementById('decisionDateTime');
+            input.min = minDateTime;
+            input.max = maxDateTime;
+        }
+
+        // Preview wager
+        function previewWager() {
+            const form = document.getElementById('createWagerForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const amount = document.getElementById('amount').value;
+            const title = document.getElementById('title').value;
+            const prediction = document.getElementById('prediction').value;
+            const terms = document.getElementById('terms').value;
+            const decisionDateTime = document.getElementById('decisionDateTime').value;
+            const category = selectedCategory ? selectedCategory.name : 'Not selected';
+            const challengeType = selectedChallengeType === 'type1' ? 'Type 1: Simple' : 'Type 2: Complex';
+
+            const previewBody = document.getElementById('previewBody');
+            previewBody.innerHTML = `
+                <div class="preview-item">
+                    <div class="preview-label">Amount</div>
+                    <div class="preview-value" style="font-size: 24px; color: var(--primary);">
+                        ${formatCurrency(amount)}
+                    </div>
+                </div>
+                
+                <div class="preview-item">
+                    <div class="preview-label">Challenge Type</div>
+                    <div class="preview-value">${challengeType}</div>
+                </div>
+                
+                <div class="preview-item">
+                    <div class="preview-label">Category</div>
+                    <div class="preview-value">${category}</div>
+                </div>
+                
+                <div class="preview-item">
+                    <div class="preview-label">Title</div>
+                    <div class="preview-value" style="font-size: 18px;">${title}</div>
+                </div>
+                
+                <div class="preview-item">
+                    <div class="preview-label">Your Prediction</div>
+                    <div class="preview-value">${prediction}</div>
+                </div>
+                
+                <div class="preview-item">
+                    <div class="preview-label">Terms & Conditions</div>
+                    <div class="preview-value" style="white-space: pre-wrap;">${terms}</div>
+                </div>
+                
+                <div class="preview-item">
+                    <div class="preview-label">Decision Time</div>
+                    <div class="preview-value">${formatDate(decisionDateTime)}</div>
+                </div>
+            `;
+
+            document.getElementById('previewModal').classList.add('show');
+        }
+
+        function closePreview() {
+            document.getElementById('previewModal').classList.remove('show');
+        }
+
+        // Handle form submission
+        document.getElementById('createWagerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!selectedChallengeType) {
+                showToast('Please select a challenge type', 'error');
+                return;
+            }
+
+            if (!selectedCategory) {
+                showToast('Please select a category', 'error');
+                return;
+            }
+
+            if (!document.getElementById('agreeTerms').checked) {
+                showToast('Please agree to the terms', 'error');
+                return;
+            }
+
+            const wagerData = {
+                amount: parseFloat(document.getElementById('amount').value),
+                challengeType: selectedChallengeType,
+                categoryId: selectedCategory.id,
+                subcategoryId: document.getElementById('subcategory').value || null,
+                title: document.getElementById('title').value,
+                creatorPrediction: document.getElementById('prediction').value,
+                termsConditions: document.getElementById('terms').value,
+                decisionDateTime: document.getElementById('decisionDateTime').value
+            };
+
+            document.getElementById('loadingOverlay').classList.add('show');
+
+            try {
+                const response = await teteAPI.createWager(wagerData);
+                
+                document.getElementById('loadingOverlay').classList.remove('show');
+                
+                if (response.wager) {
+                    showToast('Wager created successfully!', 'success');
+                    
+                    // Show success message
+                    const tierMessage = response.tierMessage || '';
+                    if (tierMessage) {
+                        showToast(tierMessage, 'info');
+                    }
+                    
+                    // Redirect to wager details or dashboard
+                    setTimeout(() => {
+                        window.location.href = `/wager-details.html?id=${response.wager.id}`;
+                    }, 1500);
+                }
+            } catch (error) {
+                document.getElementById('loadingOverlay').classList.remove('show');
+                showToast(error.message || 'Failed to create wager', 'error');
+            }
+        });
+
+        // Initialize
+        loadCategories();
+        setMinDateTime();
+
+        // Refresh datetime constraint every minute
+        setInterval(setMinDateTime, 60000);
+    </script>
+</body>
+</html>

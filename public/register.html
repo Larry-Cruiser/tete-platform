@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Tété Platform</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: radial-gradient(circle at 20% 30%, rgba(0,200,81,0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(255,215,0,0.1) 0%, transparent 50%),
+                        var(--charcoal);
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 500px;
+            background: linear-gradient(145deg, rgba(42,42,42,0.95), rgba(26,26,26,0.95));
+            border: 2px solid rgba(255,215,0,0.3);
+            border-radius: 25px;
+            padding: 50px 40px;
+            box-shadow: 
+                0 20px 60px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255,215,0,0.2);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold), var(--green));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,215,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .step-dot.active {
+            background: var(--gold);
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+
+        .form-step {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .password-strength {
+            margin-top: 10px;
+            height: 5px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+        }
+
+        .strength-weak { background: var(--red); width: 33%; }
+        .strength-medium { background: var(--burnt-orange); width: 66%; }
+        .strength-strong { background: var(--green); width: 100%; }
+
+        .strength-text {
+            font-size: 12px;
+            margin-top: 5px;
+            color: var(--grey);
+        }
+
+        .terms-container {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .terms-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .terms-container::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 4px;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            margin-top: 3px;
+        }
+
+        .age-warning {
+            background: rgba(255,69,0,0.1);
+            border: 1px solid var(--red);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .age-warning.show {
+            display: block;
+        }
+
+        .form-navigation {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .success-message {
+            text-align: center;
+            display: none;
+        }
+
+        .success-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 1s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @media (max-width: 480px) {
+            .auth-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+
+            <div class="auth-content">
+                <div class="auth-header">
+                    <h1 class="auth-logo">TÉTÉ</h1>
+                    <p class="auth-subtitle">Join the winning team!</p>
+                </div>
+
+                <div class="step-indicator">
+                    <div class="step-dot active" id="step1Dot"></div>
+                    <div class="step-dot" id="step2Dot"></div>
+                    <div class="step-dot" id="step3Dot"></div>
+                </div>
+
+                <form id="registerForm">
+                    <!-- Step 1: Basic Info -->
+                    <div class="form-step active" id="step1">
+                        <div class="form-group">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-input" id="email" 
+                                   placeholder="your@email.com" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Username (max 8 characters)</label>
+                            <input type="text" class="form-input" id="username" 
+                                   placeholder="Choose a unique username" maxlength="8" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="date" class="form-input" id="dateOfBirth" required>
+                        </div>
+
+                        <div class="age-warning" id="ageWarning">
+                            ⚠️ You must be 18 or older to use Tété.
+                        </div>
+
+                        <button type="button" class="btn-3d gold" style="width: 100%;" 
+                                onclick="nextStep()">
+                            Continue
+                        </button>
+                    </div>
+
+                    <!-- Step 2: Password -->
+                    <div class="form-step" id="step2">
+                        <div class="form-group">
+                            <label class="form-label">Create Password</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" class="form-input" id="password" 
+                                       placeholder="Create a strong password" required>
+                                <button type="button" class="toggle-password" onclick="togglePassword('password')">
+                                    <span id="passwordEye">👁️</span>
+                                </button>
+                            </div>
+                            <div class="password-strength">
+                                <div class="strength-bar" id="strengthBar"></div>
+                            </div>
+                            <div class="strength-text" id="strengthText"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Confirm Password</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" class="form-input" id="confirmPassword" 
+                                       placeholder="Re-enter your password" required>
+                                <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">
+                                    <span id="confirmPasswordEye">👁️</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-navigation">
+                            <button type="button" class="btn-3d" style="flex: 1;" 
+                                    onclick="previousStep()">
+                                Back
+                            </button>
+                            <button type="button" class="btn-3d gold" style="flex: 1;" 
+                                    onclick="nextStep()">
+                                Continue
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Terms & Submit -->
+                    <div class="form-step" id="step3">
+                        <div class="terms-container">
+                            <h4 style="color: var(--gold); margin-bottom: 10px;">Terms of Service</h4>
+                            <p style="color: var(--grey-light); font-size: 14px; line-height: 1.6;">
+                                By creating an account on Tété, you agree to the following:
+                                <br><br>
+                                1. You are 18 years or older<br>
+                                2. You will play fairly and honestly<br>
+                                3. You understand that betting involves risk<br>
+                                4. You will not create multiple accounts<br>
+                                5. You accept our 10% commission on winnings<br>
+                                6. You understand our dispute resolution process<br>
+                                7. You will provide accurate information<br>
+                                8. You will not engage in fraudulent activities<br>
+                                <br>
+                                Full terms available at suregamers.com/terms
+                            </p>
+                        </div>
+
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="agreeTerms" class="checkbox" required>
+                            <label for="agreeTerms" style="color: var(--grey-light);">
+                                I have read and agree to the Terms of Service and Fair Play Agreement
+                            </label>
+                        </div>
+
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="newsletter" class="checkbox">
+                            <label for="newsletter" style="color: var(--grey-light);">
+                                Send me tips and updates (optional)
+                            </label>
+                        </div>
+
+                        <div class="form-navigation">
+                            <button type="button" class="btn-3d" style="flex: 1;" 
+                                    onclick="previousStep()">
+                                Back
+                            </button>
+                            <button type="submit" class="btn-3d green" style="flex: 1;">
+                                Create Account
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Success Message -->
+                <div class="success-message" id="successMessage">
+                    <div class="success-icon">✅</div>
+                    <h2 style="color: var(--gold); margin-bottom: 15px;">Account Created!</h2>
+                    <p style="color: var(--grey-light); margin-bottom: 30px;">
+                        Please check your email to verify your account.
+                    </p>
+                    <button class="btn-3d gold" style="width: 100%;" 
+                            onclick="window.location.href='/login.html'">
+                        Go to Login
+                    </button>
+                </div>
+
+                <div class="auth-footer" id="authFooter">
+                    Already have an account? 
+                    <a href="/login.html">Sign in</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        function updateProgress() {
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            // Update step dots
+            for (let i = 1; i <= totalSteps; i++) {
+                const dot = document.getElementById(`step${i}Dot`);
+                if (i <= currentStep) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            }
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+        }
+
+        function nextStep() {
+            if (validateCurrentStep()) {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    showStep(currentStep);
+                    updateProgress();
+                }
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+                updateProgress();
+            }
+        }
+
+        function validateCurrentStep() {
+            if (currentStep === 1) {
+                const email = document.getElementById('email').value;
+                const username = document.getElementById('username').value;
+                const dob = document.getElementById('dateOfBirth').value;
+
+                if (!email || !username || !dob) {
+                    showToast('Please fill all fields', 'error');
+                    return false;
+                }
+
+                // Validate age
+                const age = calculateAge(dob);
+                if (age < 18) {
+                    document.getElementById('ageWarning').classList.add('show');
+                    return false;
+                } else {
+                    document.getElementById('ageWarning').classList.remove('show');
+                }
+
+                // Validate email format
+                if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                    showToast('Please enter a valid email', 'error');
+                    return false;
+                }
+
+                // Validate username
+                if (username.length < 3) {
+                    showToast('Username must be at least 3 characters', 'error');
+                    return false;
+                }
+            }
+
+            if (currentStep === 2) {
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                if (!password || !confirmPassword) {
+                    showToast('Please fill all fields', 'error');
+                    return false;
+                }
+
+                if (password.length < 6) {
+                    showToast('Password must be at least 6 characters', 'error');
+                    return false;
+                }
+
+                if (password !== confirmPassword) {
+                    showToast('Passwords do not match', 'error');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function calculateAge(dateOfBirth) {
+            const today = new Date();
+            const birthDate = new Date(dateOfBirth);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            
+            return age;
+        }
+
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const eye = document.getElementById(inputId + 'Eye');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                eye.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                eye.textContent = '👁️';
+            }
+        }
+
+        // Password strength checker
+        document.getElementById('password').addEventListener('input', function(e) {
+            const password = e.target.value;
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+            
+            let strength = 0;
+            
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+            if (password.match(/[0-9]/)) strength++;
+            if (password.match(/[^a-zA-Z0-9]/)) strength++;
+            
+            strengthBar.className = 'strength-bar';
+            
+            if (password.length === 0) {
+                strengthText.textContent = '';
+            } else if (strength < 2) {
+                strengthBar.classList.add('strength-weak');
+                strengthText.textContent = 'Weak password';
+                strengthText.style.color = 'var(--red)';
+            } else if (strength < 3) {
+                strengthBar.classList.add('strength-medium');
+                strengthText.textContent = 'Medium strength';
+                strengthText.style.color = 'var(--burnt-orange)';
+            } else {
+                strengthBar.classList.add('strength-strong');
+                strengthText.textContent = 'Strong password';
+                strengthText.style.color = 'var(--green)';
+            }
+        });
+
+        // Form submission
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!document.getElementById('agreeTerms').checked) {
+                showToast('Please agree to the terms of service', 'error');
+                return;
+            }
+            
+            const formData = {
+                email: document.getElementById('email').value,
+                username: document.getElementById('username').value.toLowerCase(),
+                password: document.getElementById('password').value,
+                dateOfBirth: document.getElementById('dateOfBirth').value
+            };
+            
+            document.getElementById('loadingOverlay').classList.add('show');
+            
+            try {
+                const response = await teteAPI.register(formData);
+                
+                document.getElementById('loadingOverlay').classList.remove('show');
+                
+                if (response.message) {
+                    // Hide form and show success message
+                    document.getElementById('registerForm').style.display = 'none';
+                    document.getElementById('authFooter').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                    
+                    showToast('Account created successfully!', 'success');
+                }
+            } catch (error) {
+                document.getElementById('loadingOverlay').classList.remove('show');
+                showToast(error.message || 'Registration failed', 'error');
+            }
+        });
+
+        // Initialize
+        updateProgress();
+    </script>
+</body>
+</html>
