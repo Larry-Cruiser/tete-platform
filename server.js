@@ -19,8 +19,8 @@ app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static files
-app.use(express.static('public'));
+// Static files - IMPORTANT: This serves your public folder
+app.use(express.static(path.join(__dirname, 'public')));
 
 // View engine setup
 app.set('view engine', 'ejs');
@@ -92,93 +92,22 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Basic route for testing
-app.get('/', (req, res) => {
-    res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Tété - Coming Soon</title>
-            <style>
-                body {
-                    background-color: #1a1a1a;
-                    color: #FFFFFF;
-                    font-family: Arial, sans-serif;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    height: 100vh;
-                    margin: 0;
-                }
-                .container {
-                    text-align: center;
-                    padding: 40px;
-                    border: 3px solid #FFD700;
-                    border-radius: 15px;
-                    background: rgba(26, 26, 26, 0.9);
-                    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-                }
-                h1 {
-                    font-size: 4em;
-                    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-                    margin-bottom: 20px;
-                    color: #FFFFFF;
-                }
-                .accent {
-                    color: #FF4500;
-                }
-                .status {
-                    color: #90EE90;
-                    font-size: 1.2em;
-                    margin: 20px 0;
-                }
-                .gold-text {
-                    color: #FFD700;
-                    font-weight: bold;
-                }
-                .endpoints {
-                    margin-top: 30px;
-                    text-align: left;
-                    background: rgba(0,0,0,0.5);
-                    padding: 20px;
-                    border-radius: 10px;
-                    border: 1px solid #FFD700;
-                }
-                .endpoints h3 {
-                    color: #FFD700;
-                    margin-bottom: 10px;
-                }
-                .endpoints ul {
-                    list-style: none;
-                    padding: 0;
-                }
-                .endpoints li {
-                    color: #B0B0B0;
-                    margin: 5px 0;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>Tété Platform</h1>
-                <p class="accent">Players win, we just host! 🎮</p>
-                <p class="status">✅ Backend API is fully operational</p>
-                <p class="gold-text">Premium P2P Betting Experience</p>
-                
-                <div class="endpoints">
-                    <h3>API Endpoints Ready:</h3>
-                    <ul>
-                        <li>✓ Authentication System</li>
-                        <li>✓ Wallet Management</li>
-                        <li>✓ Wager Creation & Joining</li>
-                        <li>✓ Real-time Chat</li>
-                        <li>✓ Payment Integration</li>
-                    </ul>
-                </div>
-            </div>
-        </body>
-        </html>
-    `);
+// Serve index.html for all non-API routes (IMPORTANT for single-page app behavior)
+app.get('*', (req, res) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: 'API route not found' });
+    }
+    
+    // Check if file exists in public folder
+    const filePath = path.join(__dirname, 'public', req.path);
+    const fs = require('fs');
+    
+    // If it's a file that exists, it will be served by express.static above
+    // Otherwise, serve index.html
+    if (!fs.existsSync(filePath)) {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
 });
 
 // Error handling middleware
@@ -190,33 +119,31 @@ app.use((err, req, res, next) => {
     });
 });
 
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({ error: 'Route not found' });
-});
+// For local development only
+if (require.main === module) {
+    const PORT = process.env.PORT || 3000;
+    const server = app.listen(PORT, () => {
+        console.log(`✅ Tété server running on port ${PORT}`);
+        console.log(`🌐 Visit http://localhost:${PORT}`);
+        console.log(`📡 API Health: http://localhost:${PORT}/api/health`);
+        console.log(`\n🎮 Ready to handle wagers!`);
+    });
 
-// Start server with real-time support
-const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => {
-    console.log(`✅ Tété server running on port ${PORT}`);
-    console.log(`🌐 Visit http://localhost:${PORT}`);
-    console.log(`📡 API Health: http://localhost:${PORT}/api/health`);
-    console.log(`\n🎮 Ready to handle wagers!`);
-});
+    // Set up Supabase real-time (for live updates)
+    const { supabaseAdmin } = require('./server/config/supabase');
 
-// Set up Supabase real-time (for live updates)
-const { supabaseAdmin } = require('./server/config/supabase');
+    // Listen for new messages
+    supabaseAdmin
+        .channel('chat-messages')
+        .on('postgres_changes', 
+            { event: 'INSERT', schema: 'public', table: 'chat_messages' }, 
+            (payload) => {
+                console.log('New message:', payload.new);
+                // In production, emit via WebSocket to connected clients
+            }
+        )
+        .subscribe();
+}
 
-// Listen for new messages
-supabaseAdmin
-    .channel('chat-messages')
-    .on('postgres_changes', 
-        { event: 'INSERT', schema: 'public', table: 'chat_messages' }, 
-        (payload) => {
-            console.log('New message:', payload.new);
-            // In production, emit via WebSocket to connected clients
-        }
-    )
-    .subscribe();
-
-module.exports = server;
+// Export for Vercel
+module.exports = app;
