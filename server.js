@@ -5,10 +5,10 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 
-// Only load dotenv in development
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
+// Temporarily disable dotenv to debug
+// if (process.env.NODE_ENV !== 'production') {
+//     require('dotenv').config();
+// }
 
 const app = express();
 
@@ -37,19 +37,43 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Import routes
-const authRoutes = require('./server/routes/auth');
-const walletRoutes = require('./server/routes/wallet');
-const wagerRoutes = require('./server/routes/wager');
-const chatRoutes = require('./server/routes/chat');
-const generalRoutes = require('./server/routes/general');
+// Import routes with error handling
+let authRoutes, walletRoutes, wagerRoutes, chatRoutes, generalRoutes;
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/wallet', walletRoutes);
-app.use('/api/wagers', wagerRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/general', generalRoutes);
+try {
+    console.log('Loading auth routes...');
+    authRoutes = require('./server/routes/auth');
+    console.log('Loading wallet routes...');
+    walletRoutes = require('./server/routes/wallet');
+    console.log('Loading wager routes...');
+    wagerRoutes = require('./server/routes/wager');
+    console.log('Loading chat routes...');
+    chatRoutes = require('./server/routes/chat');
+    console.log('Loading general routes...');
+    generalRoutes = require('./server/routes/general');
+    console.log('All routes loaded successfully');
+} catch (error) {
+    console.error('Error loading routes:', error);
+    throw error;
+}
+
+// API Routes with error handling
+try {
+    console.log('Attaching auth routes...');
+    app.use('/api/auth', authRoutes);
+    console.log('Attaching wallet routes...');
+    app.use('/api/wallet', walletRoutes);
+    console.log('Attaching wager routes...');
+    app.use('/api/wagers', wagerRoutes);
+    console.log('Attaching chat routes...');
+    app.use('/api/chat', chatRoutes);
+    console.log('Attaching general routes...');
+    app.use('/api/general', generalRoutes);
+    console.log('All routes attached successfully');
+} catch (error) {
+    console.error('Error attaching routes:', error);
+    throw error;
+}
 
 // Paystack webhook endpoint
 app.post('/api/webhooks/paystack', express.raw({ type: 'application/json' }), (req, res) => {
