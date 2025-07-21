@@ -521,3 +521,18 @@ body {
     border-color: var(--primary-light); 
     box-shadow: 0 0 20px rgba(255,107,53,0.2);
 }
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(255,255,255,0.05);
+    box-shadow: 0 0 20px rgba(204,85,0,0.2);
+}
+
+/* Select dropdown option styling */
+select.form-input option,
+.filter-select option {
+    background: var(--charcoal);
+    color: var(--white);
+    padding: 10px;
+}

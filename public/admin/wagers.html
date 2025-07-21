@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wagers Management - Tété Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+            background: var(--black);
+        }
+
+        /* Admin Sidebar - Reused */
+        .admin-sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, rgba(15,15,15,0.98), rgba(0,0,0,0.98));
+            border-right: 1px solid rgba(231,76,60,0.3);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .admin-logo-section {
+            padding: 30px 20px;
+            border-bottom: 1px solid rgba(231,76,60,0.2);
+            text-align: center;
+        }
+
+        .admin-logo {
+            font-size: 2.5em;
+            font-weight: 900;
+            color: var(--white);
+            letter-spacing: 3px;
+            margin-bottom: 5px;
+        }
+
+        .admin-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: var(--white);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .admin-nav {
+            padding: 20px 0;
+        }
+
+        .admin-nav-item {
+            display: block;
+            padding: 15px 25px;
+            color: var(--grey-light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .admin-nav-item:hover {
+            background: rgba(231,76,60,0.1);
+            color: var(--primary);
+            padding-left: 30px;
+        }
+
+        .admin-nav-item.active {
+            background: rgba(231,76,60,0.15);
+            color: var(--primary);
+            border-left: 4px solid var(--primary);
+        }
+
+        .admin-nav-icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .admin-user-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            border-top: 1px solid rgba(231,76,60,0.2);
+            background: rgba(0,0,0,0.5);
+        }
+
+        .admin-user-name {
+            color: var(--white);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .admin-user-role {
+            color: var(--grey);
+            font-size: 13px;
+        }
+
+        .logout-button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            background: rgba(231,76,60,0.2);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .logout-button:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        /* Main Content */
+        .admin-main {
+            flex: 1;
+            margin-left: 280px;
+            padding: 30px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .admin-title {
+            font-size: 2.5em;
+            color: var(--white);
+            font-weight: 700;
+        }
+
+        /* Wager Stats */
+        .wager-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--grey);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Category Tabs */
+        .category-tabs {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 15px;
+            padding: 5px;
+            display: flex;
+            gap: 5px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .category-tab {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            color: var(--grey-light);
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .category-tab:hover {
+            background: rgba(231,76,60,0.05);
+        }
+
+        .category-tab.active {
+            background: rgba(231,76,60,0.15);
+            color: var(--primary);
+        }
+
+        /* Filters */
+        .filters-section {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .filters-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 10px;
+            color: var(--white);
+            cursor: pointer;
+        }
+
+        .filter-select option {
+            background: var(--charcoal);
+            color: var(--white);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 10px;
+            color: var(--white);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--grey);
+        }
+
+        /* Wagers Table */
+        .wagers-section {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px;
+            border-bottom: 1px solid rgba(231,76,60,0.2);
+        }
+
+        .table-title {
+            font-size: 1.3em;
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px 20px;
+            color: var(--grey);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(231,76,60,0.1);
+            background: rgba(231,76,60,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 20px;
+            color: var(--white);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        tr:hover {
+            background: rgba(231,76,60,0.02);
+        }
+
+        .wager-id {
+            color: var(--grey);
+            font-size: 12px;
+        }
+
+        .wager-title {
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 3px;
+        }
+
+        .wager-category {
+            font-size: 12px;
+            color: var(--grey);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-open {
+            background: rgba(52,152,219,0.2);
+            color: #3498DB;
+        }
+
+        .status-in_progress {
+            background: rgba(39,174,96,0.2);
+            color: var(--green);
+        }
+
+        .status-completed {
+            background: rgba(149,165,166,0.2);
+            color: var(--grey-light);
+        }
+
+        .status-in_dispute {
+            background: rgba(231,76,60,0.2);
+            color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        .status-cancelled {
+            background: rgba(231,76,60,0.2);
+            color: var(--primary);
+        }
+
+        .participants {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .participant-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .amount-cell {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-button {
+            padding: 8px 15px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 8px;
+            color: var(--white);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-button:hover {
+            background: rgba(231,76,60,0.1);
+            border-color: var(--primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--grey);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        @media (max-width: 1024px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .admin-sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .admin-main {
+                margin-left: 0;
+            }
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            padding: 10px;
+            background: var(--primary);
+            border: none;
+            border-radius: 10px;
+            color: var(--white);
+            cursor: pointer;
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Admin Sidebar -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="admin-logo-section">
+                <h1 class="admin-logo">TÉTÉ</h1>
+                <span class="admin-badge">Admin Portal</span>
+            </div>
+
+            <nav class="admin-nav">
+                <a href="/admin/dashboard.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="/admin/users.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">👥</span>
+                    Users
+                </a>
+                <a href="/admin/wagers.html" class="admin-nav-item active">
+                    <span class="admin-nav-icon">🎮</span>
+                    Wagers
+                </a>
+                <a href="/admin/disputes.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">⚖️</span>
+                    Disputes (Oracle)
+                </a>
+                <a href="/admin/finance.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">💰</span>
+                    Finance
+                </a>
+                <a href="/admin/reports.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">📈</span>
+                    Reports
+                </a>
+                <a href="/admin/settings.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">⚙️</span>
+                    Settings
+                </a>
+            </nav>
+
+            <div class="admin-user-info">
+                <div class="admin-user-name" id="adminName">Admin User</div>
+                <div class="admin-user-role">Super Admin</div>
+                <button class="logout-button" onclick="adminLogout()">
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <div class="admin-header">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <h1 class="admin-title">Wagers Management</h1>
+            </div>
+
+            <!-- Wager Stats -->
+            <div class="wager-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalWagers">
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="stat-label">Total Wagers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="activeWagers">
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="stat-label">Active</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="openWagers">
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="stat-label">Open</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="disputedWagers">
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="stat-label">In Dispute</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalValue">
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="stat-label">Total Value</div>
+                </div>
+            </div>
+
+            <!-- Category Tabs -->
+            <div class="category-tabs">
+                <button class="category-tab active" onclick="filterByCategory('all')">All Bets</button>
+                <button class="category-tab" onclick="filterByCategory('football')">Football</button>
+                <button class="category-tab" onclick="filterByCategory('politics')">Politics</button>
+                <button class="category-tab" onclick="filterByCategory('basketball')">Basketball</button>
+                <button class="category-tab" onclick="filterByCategory('entertainment')">Entertainment</button>
+                <button class="category-tab" onclick="filterByCategory('esports')">Esports</button>
+                <button class="category-tab" onclick="filterByCategory('boxing')">Boxing</button>
+                <button class="category-tab" onclick="filterByCategory('reality-tv')">Reality TV</button>
+                <button class="category-tab" onclick="filterByCategory('current-events')">Current Events</button>
+                <button class="category-tab" onclick="filterByCategory('tech')">Tech</button>
+                <button class="category-tab" onclick="filterByCategory('custom')">Custom</button>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-section">
+                <div class="filters-row">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="Search by ID, title, or user..." id="searchInput">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select class="filter-select" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="open">Open</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="pending_outcome">Pending Outcome</option>
+                            <option value="in_dispute">In Dispute</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        
+                        <select class="filter-select" id="tierFilter">
+                            <option value="">All Tiers</option>
+                            <option value="standard">Standard</option>
+                            <option value="oga">Oga</option>
+                            <option value="boss">Boss</option>
+                            <option value="chairman">Chairman</option>
+                            <option value="odogwu">Odogwu</option>
+                        </select>
+                        
+                        <select class="filter-select" id="typeFilter">
+                            <option value="">All Types</option>
+                            <option value="type1">Type 1</option>
+                            <option value="type2">Type 2</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wagers Table -->
+            <div class="wagers-section">
+                <div class="table-header">
+                    <h3 class="table-title">All Wagers</h3>
+                    <span style="color: var(--grey);" id="wagerCount">Loading...</span>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Wager</th>
+                                <th>Status</th>
+                                <th>Participants</th>
+                                <th>Amount</th>
+                                <th>Created</th>
+                                <th>Decision Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wagersBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 60px;">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">🎮</div>
+                                        <h3 style="color: var(--white); font-size: 1.2em; margin-bottom: 10px;">
+                                            No Wagers Yet
+                                        </h3>
+                                        <p>Wagers will appear here once users start creating them</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // Check admin authentication
+        function checkAdminAuth() {
+            const adminToken = localStorage.getItem('tete_admin_token');
+            if (!adminToken) {
+                window.location.href = '/admin/login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Initialize
+        if (!checkAdminAuth()) {
+            // Redirect handled above
+        }
+
+        // Load admin info
+        const adminUser = JSON.parse(localStorage.getItem('tete_admin_user') || '{}');
+        document.getElementById('adminName').textContent = adminUser.name || 'Admin User';
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            document.getElementById('adminSidebar').classList.toggle('mobile-open');
+        }
+
+        // Load wager stats
+        async function loadWagerStats() {
+            // In production, these would be API calls
+            document.getElementById('totalWagers').textContent = '0';
+            document.getElementById('activeWagers').textContent = '0';
+            document.getElementById('openWagers').textContent = '0';
+            document.getElementById('disputedWagers').textContent = '0';
+            document.getElementById('totalValue').textContent = '₦0';
+        }
+
+        // Filter by category
+        function filterByCategory(category) {
+            // Update active tab
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // In production, filter wagers
+            console.log('Filtering by category:', category);
+            loadWagers();
+        }
+
+        // Load wagers
+        async function loadWagers() {
+            const tbody = document.getElementById('wagersBody');
+            const countElement = document.getElementById('wagerCount');
+            
+            // In production, this would fetch from API
+            // For now, show empty state
+            countElement.textContent = '0 wagers';
+            
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 60px;">
+                        <div class="empty-state">
+                            <div class="empty-icon">🎮</div>
+                            <h3 style="color: var(--white); font-size: 1.2em; margin-bottom: 10px;">
+                                No Wagers Yet
+                            </h3>
+                            <p>Wagers will appear here once users start creating them</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // View wager details
+        function viewWagerDetails(wagerId) {
+            // In production, open modal or navigate to details
+            console.log('Viewing wager:', wagerId);
+        }
+
+        // Cancel wager
+        function cancelWager(wagerId) {
+            if (confirm('Are you sure you want to cancel this wager? Funds will be refunded to participants.')) {
+                // In production, call API
+                alert('Wager cancelled successfully!');
+                loadWagers();
+            }
+        }
+
+        // Force resolve wager
+        function forceResolve(wagerId) {
+            if (confirm('Are you sure you want to force resolve this wager? This should only be done in exceptional circumstances.')) {
+                // In production, call API
+                alert('Wager resolved!');
+                loadWagers();
+            }
+        }
+
+        // Admin logout
+        function adminLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('tete_admin_token');
+                localStorage.removeItem('tete_admin_user');
+                window.location.href = '/admin/login.html';
+            }
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            // In production, filter table or call API
+            console.log('Searching for:', searchTerm);
+        });
+
+        // Initialize
+        loadWagerStats();
+        loadWagers();
+    </script>
+</body>
+</html>

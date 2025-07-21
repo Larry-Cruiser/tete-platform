@@ -5,3 +5,6 @@ logs/
 *.log
 .vscode/
 uploads/
+.env.local
+npm-debug.log*
+.vercel" > .gitignore

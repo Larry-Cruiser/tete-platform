@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Tété Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+            background: var(--black);
+        }
+
+        /* Admin Sidebar - Reused */
+        .admin-sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, rgba(15,15,15,0.98), rgba(0,0,0,0.98));
+            border-right: 1px solid rgba(231,76,60,0.3);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .admin-logo-section {
+            padding: 30px 20px;
+            border-bottom: 1px solid rgba(231,76,60,0.2);
+            text-align: center;
+        }
+
+        .admin-logo {
+            font-size: 2.5em;
+            font-weight: 900;
+            color: var(--white);
+            letter-spacing: 3px;
+            margin-bottom: 5px;
+        }
+
+        .admin-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: var(--white);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .admin-nav {
+            padding: 20px 0;
+        }
+
+        .admin-nav-item {
+            display: block;
+            padding: 15px 25px;
+            color: var(--grey-light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .admin-nav-item:hover {
+            background: rgba(231,76,60,0.1);
+            color: var(--primary);
+            padding-left: 30px;
+        }
+
+        .admin-nav-item.active {
+            background: rgba(231,76,60,0.15);
+            color: var(--primary);
+            border-left: 4px solid var(--primary);
+        }
+
+        .admin-nav-icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .admin-user-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            border-top: 1px solid rgba(231,76,60,0.2);
+            background: rgba(0,0,0,0.5);
+        }
+
+        .admin-user-name {
+            color: var(--white);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .admin-user-role {
+            color: var(--grey);
+            font-size: 13px;
+        }
+
+        .logout-button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            background: rgba(231,76,60,0.2);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .logout-button:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        /* Main Content */
+        .admin-main {
+            flex: 1;
+            margin-left: 280px;
+            padding: 30px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .admin-title {
+            font-size: 2.5em;
+            color: var(--white);
+            font-weight: 700;
+        }
+
+        /* Settings Sections */
+        .settings-grid {
+            display: grid;
+            gap: 30px;
+        }
+
+        .settings-section {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .settings-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--burnt-orange));
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        .section-description {
+            color: var(--grey);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .settings-form {
+            display: grid;
+            gap: 25px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-label {
+            color: var(--grey-light);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-input {
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 10px;
+            color: var(--white);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .form-input option {
+            background: var(--charcoal);
+            color: var(--white);
+        }
+
+        .form-help {
+            color: var(--grey);
+            font-size: 12px;
+        }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(231,76,60,0.1);
+        }
+
+        .toggle-group:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-info {
+            flex: 1;
+        }
+
+        .toggle-label {
+            color: var(--white);
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .toggle-description {
+            color: var(--grey);
+            font-size: 13px;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.1);
+            transition: .4s;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 3px;
+            background: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background: var(--green);
+            border-color: var(--green);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        .save-button {
+            padding: 15px 40px;
+            background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: 50px;
+            color: var(--white);
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(231,76,60,0.4);
+            margin-top: 10px;
+        }
+
+        .save-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(231,76,60,0.5);
+        }
+
+        .save-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .danger-zone {
+            background: rgba(231,76,60,0.05);
+            border: 2px solid rgba(231,76,60,0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .danger-title {
+            color: var(--primary);
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .danger-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .danger-button {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .danger-button:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .success-message {
+            background: rgba(39,174,96,0.1);
+            border: 1px solid var(--green);
+            color: var(--green);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @media (max-width: 1024px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .admin-sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .admin-main {
+                margin-left: 0;
+            }
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            padding: 10px;
+            background: var(--primary);
+            border: none;
+            border-radius: 10px;
+            color: var(--white);
+            cursor: pointer;
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Admin Sidebar -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="admin-logo-section">
+                <h1 class="admin-logo">TÉTÉ</h1>
+                <span class="admin-badge">Admin Portal</span>
+            </div>
+
+            <nav class="admin-nav">
+                <a href="/admin/dashboard.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="/admin/users.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">👥</span>
+                    Users
+                </a>
+                <a href="/admin/wagers.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">🎮</span>
+                    Wagers
+                </a>
+                <a href="/admin/disputes.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">⚖️</span>
+                    Disputes (Oracle)
+                </a>
+                <a href="/admin/finance.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">💰</span>
+                    Finance
+                </a>
+                <a href="/admin/reports.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">📈</span>
+                    Reports
+                </a>
+                <a href="/admin/settings.html" class="admin-nav-item active">
+                    <span class="admin-nav-icon">⚙️</span>
+                    Settings
+                </a>
+            </nav>
+
+            <div class="admin-user-info">
+                <div class="admin-user-name" id="adminName">Admin User</div>
+                <div class="admin-user-role">Super Admin</div>
+                <button class="logout-button" onclick="adminLogout()">
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <div class="admin-header">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <h1 class="admin-title">Platform Settings</h1>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                ✅ Settings saved successfully!
+            </div>
+
+            <div class="settings-grid">
+                <!-- General Settings -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">General Settings</h2>
+                            <p class="section-description">Basic platform configuration</p>
+                        </div>
+                    </div>
+
+                    <form class="settings-form" id="generalSettingsForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Platform Name</label>
+                                <input type="text" class="form-input" value="Tété Platform" id="platformName">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Support Email</label>
+                                <input type="email" class="form-input" value="support@suregamers.com" id="supportEmail">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Time Zone</label>
+                                <select class="form-input" id="timezone">
+                                    <option value="Africa/Lagos" selected>Africa/Lagos (WAT)</option>
+                                    <option value="UTC">UTC</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Currency</label>
+                                <select class="form-input" id="currency">
+                                    <option value="NGN" selected>Nigerian Naira (₦)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 20px;">
+                            <div class="toggle-group">
+                                <div class="toggle-info">
+                                    <div class="toggle-label">Maintenance Mode</div>
+                                    <div class="toggle-description">Temporarily disable the platform for users</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="maintenanceMode">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="toggle-group">
+                                <div class="toggle-info">
+                                    <div class="toggle-label">Registration Open</div>
+                                    <div class="toggle-description">Allow new users to register</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="registrationOpen" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="save-button">Save General Settings</button>
+                    </form>
+                </div>
+
+                <!-- Commission Settings -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">Commission & Fees</h2>
+                            <p class="section-description">Configure platform commission rates</p>
+                        </div>
+                    </div>
+
+                    <form class="settings-form" id="commissionSettingsForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Standard Win Commission (%)</label>
+                                <input type="number" class="form-input" value="10" min="0" max="50" id="winCommission">
+                                <span class="form-help">Commission on winning wagers</span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Draw/Both Lose Penalty (%)</label>
+                                <input type="number" class="form-input" value="15" min="0" max="50" id="drawPenalty">
+                                <span class="form-help">Penalty when both users lose</span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Dispute Loss Penalty (%)</label>
+                                <input type="number" class="form-input" value="10" min="0" max="50" id="disputePenalty">
+                                <span class="form-help">Additional penalty for losing disputes</span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Oracle Contest Fee (%)</label>
+                                <input type="number" class="form-input" value="5" min="0" max="50" id="contestFee">
+                                <span class="form-help">Fee to contest Oracle decisions</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="save-button">Save Commission Settings</button>
+                    </form>
+                </div>
+
+                <!-- Wager Limits -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">Wager Limits</h2>
+                            <p class="section-description">Set minimum and maximum wager amounts</p>
+                        </div>
+                    </div>
+
+                    <form class="settings-form" id="limitSettingsForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Minimum Wager Amount (₦)</label>
+                                <input type="number" class="form-input" value="200" min="100" id="minWager">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Maximum Wager Amount (₦)</label>
+                                <input type="number" class="form-input" value="500000" max="10000000" id="maxWager">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Minimum Withdrawal (₦)</label>
+                                <input type="number" class="form-input" value="1000" min="500" id="minWithdrawal">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Maximum Daily Withdrawal (₦)</label>
+                                <input type="number" class="form-input" value="1000000" id="maxDailyWithdrawal">
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 20px;">
+                            <div class="form-group">
+                                <label class="form-label">Decision Time Minimum (minutes)</label>
+                                <input type="number" class="form-input" value="30" min="15" id="minDecisionTime">
+                                <span class="form-help">Minimum time before wager decision</span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Decision Time Maximum (days)</label>
+                                <input type="number" class="form-input" value="7" max="30" id="maxDecisionDays">
+                                <span class="form-help">Maximum days for wager decision</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="save-button">Save Limit Settings</button>
+                    </form>
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">Notifications</h2>
+                            <p class="section-description">Configure email and SMS notifications</p>
+                        </div>
+                    </div>
+
+                    <form class="settings-form" id="notificationSettingsForm">
+                        <div class="toggle-group">
+                            <div class="toggle-info">
+                                <div class="toggle-label">Email Notifications</div>
+                                <div class="toggle-description">Send email notifications to users</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="emailNotifications" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="toggle-group">
+                            <div class="toggle-info">
+                                <div class="toggle-label">SMS Notifications</div>
+                                <div class="toggle-description">Send SMS alerts for critical events</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="smsNotifications">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="toggle-group">
+                            <div class="toggle-info">
+                                <div class="toggle-label">Push Notifications</div>
+                                <div class="toggle-description">Enable browser push notifications</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="pushNotifications">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="save-button">Save Notification Settings</button>
+                    </form>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">System Actions</h2>
+                            <p class="section-description">Critical system operations</p>
+                        </div>
+                    </div>
+
+                    <div class="danger-zone">
+                        <h3 class="danger-title">Danger Zone</h3>
+                        <p style="color: var(--grey); margin-bottom: 20px;">
+                            These actions are irreversible and should be used with caution.
+                        </p>
+                        
+                        <div class="danger-actions">
+                            <button class="danger-button" onclick="clearCache()">
+                                Clear System Cache
+                            </button>
+                            <button class="danger-button" onclick="resetStats()">
+                                Reset Statistics
+                            </button>
+                            <button class="danger-button" onclick="exportDatabase()">
+                                Export Database
+                            </button>
+                            <button class="danger-button" onclick="systemBackup()">
+                                Create Backup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // Check admin authentication
+        function checkAdminAuth() {
+            const adminToken = localStorage.getItem('tete_admin_token');
+            if (!adminToken) {
+                window.location.href = '/admin/login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Initialize
+        if (!checkAdminAuth()) {
+            // Redirect handled above
+        }
+
+        // Load admin info
+        const adminUser = JSON.parse(localStorage.getItem('tete_admin_user') || '{}');
+        document.getElementById('adminName').textContent = adminUser.name || 'Admin User';
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            document.getElementById('adminSidebar').classList.toggle('mobile-open');
+        }
+
+        // Show success message
+        function showSuccess() {
+            const message = document.getElementById('successMessage');
+            message.classList.add('show');
+            setTimeout(() => {
+                message.classList.remove('show');
+            }, 3000);
+        }
+
+        // Form submissions
+        document.getElementById('generalSettingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            // In production, save to API
+            showSuccess();
+        });
+
+        document.getElementById('commissionSettingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            // In production, save to API
+            showSuccess();
+        });
+
+        document.getElementById('limitSettingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            // In production, save to API
+            showSuccess();
+        });
+
+        document.getElementById('notificationSettingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            // In production, save to API
+            showSuccess();
+        });
+
+        // Danger zone actions
+        function clearCache() {
+            if (confirm('Are you sure you want to clear the system cache?')) {
+                // In production, call API
+                alert('Cache cleared successfully!');
+            }
+        }
+
+        function resetStats() {
+            if (confirm('Are you sure you want to reset all statistics? This cannot be undone.')) {
+                if (confirm('This is your final warning. All statistics will be permanently reset.')) {
+                    // In production, call API
+                    alert('Statistics reset successfully!');
+                }
+            }
+        }
+
+        function exportDatabase() {
+            // In production, generate database export
+            alert('Database export started. You will receive an email when complete.');
+        }
+
+        function systemBackup() {
+            // In production, create system backup
+            alert('System backup initiated. This may take several minutes.');
+        }
+
+        // Admin logout
+        function adminLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('tete_admin_token');
+                localStorage.removeItem('tete_admin_user');
+                window.location.href = '/admin/login.html';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Management - Tété Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+            background: var(--black);
+        }
+
+        /* Admin Sidebar - Reused */
+        .admin-sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, rgba(15,15,15,0.98), rgba(0,0,0,0.98));
+            border-right: 1px solid rgba(231,76,60,0.3);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .admin-logo-section {
+            padding: 30px 20px;
+            border-bottom: 1px solid rgba(231,76,60,0.2);
+            text-align: center;
+        }
+
+        .admin-logo {
+            font-size: 2.5em;
+            font-weight: 900;
+            color: var(--white);
+            letter-spacing: 3px;
+            margin-bottom: 5px;
+        }
+
+        .admin-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: var(--white);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .admin-nav {
+            padding: 20px 0;
+        }
+
+        .admin-nav-item {
+            display: block;
+            padding: 15px 25px;
+            color: var(--grey-light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .admin-nav-item:hover {
+            background: rgba(231,76,60,0.1);
+            color: var(--primary);
+            padding-left: 30px;
+        }
+
+        .admin-nav-item.active {
+            background: rgba(231,76,60,0.15);
+            color: var(--primary);
+            border-left: 4px solid var(--primary);
+        }
+
+        .admin-nav-icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .admin-user-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            border-top: 1px solid rgba(231,76,60,0.2);
+            background: rgba(0,0,0,0.5);
+        }
+
+        .admin-user-name {
+            color: var(--white);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .admin-user-role {
+            color: var(--grey);
+            font-size: 13px;
+        }
+
+        .logout-button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            background: rgba(231,76,60,0.2);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .logout-button:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        /* Main Content */
+        .admin-main {
+            flex: 1;
+            margin-left: 280px;
+            padding: 30px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .admin-title {
+            font-size: 2.5em;
+            color: var(--white);
+            font-weight: 700;
+        }
+
+        /* Finance Stats */
+        .finance-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .finance-card {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .finance-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--burnt-orange));
+        }
+
+        .finance-card.gold::before {
+            background: linear-gradient(90deg, var(--gold), var(--gold-light));
+        }
+
+        .finance-card.green::before {
+            background: linear-gradient(90deg, var(--green), var(--green-dark));
+        }
+
+        .finance-icon {
+            font-size: 36px;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        .finance-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 5px;
+        }
+
+        .finance-label {
+            color: var(--grey);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .finance-change {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .change-positive {
+            background: rgba(39,174,96,0.2);
+            color: var(--green);
+        }
+
+        .change-negative {
+            background: rgba(231,76,60,0.2);
+            color: var(--primary);
+        }
+
+        /* Transaction Table */
+        .transactions-section {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px;
+            border-bottom: 1px solid rgba(231,76,60,0.2);
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px 20px;
+            color: var(--grey);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(231,76,60,0.1);
+            background: rgba(231,76,60,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 20px;
+            color: var(--white);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        tr:hover {
+            background: rgba(231,76,60,0.02);
+        }
+
+        .transaction-type {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .type-deposit {
+            background: rgba(39,174,96,0.2);
+            color: var(--green);
+        }
+
+        .type-withdrawal {
+            background: rgba(231,76,60,0.2);
+            color: var(--primary);
+        }
+
+        .type-commission {
+            background: rgba(243,156,18,0.2);
+            color: var(--gold);
+        }
+
+        .amount-positive {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .amount-negative {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-completed {
+            background: rgba(39,174,96,0.2);
+            color: var(--green);
+        }
+
+        .status-pending {
+            background: rgba(243,156,18,0.2);
+            color: var(--gold);
+        }
+
+        .status-failed {
+            background: rgba(231,76,60,0.2);
+            color: var(--primary);
+        }
+
+        /* Filter Controls */
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 10px;
+            color: var(--white);
+            cursor: pointer;
+        }
+
+        .filter-select option {
+            background: var(--charcoal);
+            color: var(--white);
+        }
+
+        .date-range {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .date-input {
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 10px;
+            color: var(--white);
+        }
+
+        .export-button {
+            padding: 10px 20px;
+            background: rgba(39,174,96,0.2);
+            border: 1px solid var(--green);
+            border-radius: 10px;
+            color: var(--green);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .export-button:hover {
+            background: var(--green);
+            color: var(--white);
+        }
+
+        /* Withdrawal Requests */
+        .withdrawal-requests {
+            background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        .request-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+
+        .request-info {
+            flex: 1;
+        }
+
+        .request-user {
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 5px;
+        }
+
+        .request-details {
+            color: var(--grey);
+            font-size: 14px;
+        }
+
+        .request-amount {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--gold);
+            margin-right: 20px;
+        }
+
+        .request-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .approve-button, .reject-button {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .approve-button {
+            background: rgba(39,174,96,0.2);
+            color: var(--green);
+            border: 1px solid var(--green);
+        }
+
+        .approve-button:hover {
+            background: var(--green);
+            color: var(--white);
+        }
+
+        .reject-button {
+            background: rgba(231,76,60,0.2);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .reject-button:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--grey);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        @media (max-width: 1024px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .admin-sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .admin-main {
+                margin-left: 0;
+            }
+
+            .finance-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            padding: 10px;
+            background: var(--primary);
+            border: none;
+            border-radius: 10px;
+            color: var(--white);
+            cursor: pointer;
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Admin Sidebar -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="admin-logo-section">
+                <h1 class="admin-logo">TÉTÉ</h1>
+                <span class="admin-badge">Admin Portal</span>
+            </div>
+
+            <nav class="admin-nav">
+                <a href="/admin/dashboard.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="/admin/users.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">👥</span>
+                    Users
+                </a>
+                <a href="/admin/wagers.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">🎮</span>
+                    Wagers
+                </a>
+                <a href="/admin/disputes.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">⚖️</span>
+                    Disputes (Oracle)
+                </a>
+                <a href="/admin/finance.html" class="admin-nav-item active">
+                    <span class="admin-nav-icon">💰</span>
+                    Finance
+                </a>
+                <a href="/admin/reports.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">📈</span>
+                    Reports
+                </a>
+                <a href="/admin/settings.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">⚙️</span>
+                    Settings
+                </a>
+            </nav>
+
+            <div class="admin-user-info">
+                <div class="admin-user-name" id="adminName">Admin User</div>
+                <div class="admin-user-role">Super Admin</div>
+                <button class="logout-button" onclick="adminLogout()">
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <div class="admin-header">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <h1 class="admin-title">Finance Management</h1>
+            </div>
+
+            <!-- Finance Stats -->
+            <div class="finance-stats">
+                <div class="finance-card green">
+                    <div class="finance-icon">💰</div>
+                    <div class="finance-value" id="totalRevenue">
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="finance-label">Total Revenue</div>
+                    <span class="finance-change change-positive" id="revenueChange">Loading...</span>
+                </div>
+
+                <div class="finance-card">
+                    <div class="finance-icon">💳</div>
+                    <div class="finance-value" id="totalDeposits">
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="finance-label">Total Deposits</div>
+                </div>
+
+                <div class="finance-card">
+                    <div class="finance-icon">💸</div>
+                    <div class="finance-value" id="totalWithdrawals">
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="finance-label">Total Withdrawals</div>
+                </div>
+
+                <div class="finance-card gold">
+                    <div class="finance-icon">🏦</div>
+                    <div class="finance-value" id="platformBalance">
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="finance-label">Platform Balance</div>
+                </div>
+
+                <div class="finance-card">
+                    <div class="finance-icon">📊</div>
+                    <div class="finance-value" id="totalCommissions">
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="finance-label">Total Commissions</div>
+                </div>
+
+                <div class="finance-card">
+                    <div class="finance-icon">⏳</div>
+                    <div class="finance-value" id="pendingWithdrawals">
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="finance-label">Pending Withdrawals</div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="transactions-section">
+                <div class="section-header">
+                    <h3 class="section-title">Recent Transactions</h3>
+                    <div class="filter-controls">
+                        <select class="filter-select" id="typeFilter">
+                            <option value="">All Types</option>
+                            <option value="deposit">Deposits</option>
+                            <option value="withdrawal">Withdrawals</option>
+                            <option value="commission">Commissions</option>
+                        </select>
+                        
+                        <div class="date-range">
+                            <input type="date" class="date-input" id="dateFrom">
+                            <span style="color: var(--grey);">to</span>
+                            <input type="date" class="date-input" id="dateTo">
+                        </div>
+                        
+                        <button class="export-button" onclick="exportTransactions()">
+                            📥 Export CSV
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>User</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Reference</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 40px;">
+                                    <span class="loading-spinner"></span>
+                                    <p style="margin-top: 10px; color: var(--grey);">Loading transactions...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pending Withdrawal Requests -->
+            <div class="withdrawal-requests">
+                <div class="section-header">
+                    <h3 class="section-title">Pending Withdrawal Requests</h3>
+                    <span style="color: var(--grey);" id="pendingCount">Loading...</span>
+                </div>
+
+                <div id="withdrawalRequests">
+                    <div style="text-align: center; padding: 40px;">
+                        <span class="loading-spinner"></span>
+                        <p style="margin-top: 10px; color: var(--grey);">Loading withdrawal requests...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // Check admin authentication
+        function checkAdminAuth() {
+            const adminToken = localStorage.getItem('tete_admin_token');
+            if (!adminToken) {
+                window.location.href = '/admin/login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Initialize
+        if (!checkAdminAuth()) {
+            // Redirect handled above
+        }
+
+        // Load admin info
+        const adminUser = JSON.parse(localStorage.getItem('tete_admin_user') || '{}');
+        document.getElementById('adminName').textContent = adminUser.name || 'Admin User';
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            document.getElementById('adminSidebar').classList.toggle('mobile-open');
+        }
+
+        // Load finance data
+        async function loadFinanceData() {
+            try {
+                // In production, these would be API calls
+                // For now, let's show "No data yet" messages
+                
+                document.getElementById('totalRevenue').textContent = '₦0.00';
+                document.getElementById('totalDeposits').textContent = '₦0.00';
+                document.getElementById('totalWithdrawals').textContent = '₦0.00';
+                document.getElementById('platformBalance').textContent = '₦0.00';
+                document.getElementById('totalCommissions').textContent = '₦0.00';
+                document.getElementById('pendingWithdrawals').textContent = '0';
+                document.getElementById('revenueChange').textContent = 'No data yet';
+                
+                // Load transactions
+                loadTransactions();
+                
+                // Load withdrawal requests
+                loadWithdrawalRequests();
+            } catch (error) {
+                console.error('Failed to load finance data:', error);
+            }
+        }
+
+        // Load transactions
+        async function loadTransactions() {
+            const tbody = document.getElementById('transactionsBody');
+            
+            // In production, this would fetch from API
+            // For now, show empty state
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 60px;">
+                        <div class="empty-state">
+                            <div class="empty-icon">📄</div>
+                            <h3 style="color: var(--white); font-size: 1.2em; margin-bottom: 10px;">
+                                No Transactions Yet
+                            </h3>
+                            <p>Transaction history will appear here once users start using the platform</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Load withdrawal requests
+        async function loadWithdrawalRequests() {
+            const container = document.getElementById('withdrawalRequests');
+            const countElement = document.getElementById('pendingCount');
+            
+            // In production, this would fetch from API
+            // For now, show empty state
+            countElement.textContent = '0 pending';
+            
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">💸</div>
+                    <h3 style="color: var(--white); font-size: 1.2em; margin-bottom: 10px;">
+                        No Pending Withdrawals
+                    </h3>
+                    <p>Withdrawal requests will appear here for approval</p>
+                </div>
+            `;
+        }
+
+        // Approve withdrawal
+        function approveWithdrawal(withdrawalId) {
+            if (confirm('Are you sure you want to approve this withdrawal?')) {
+                // In production, call API
+                alert('Withdrawal approved successfully!');
+                loadWithdrawalRequests();
+            }
+        }
+
+        // Reject withdrawal
+        function rejectWithdrawal(withdrawalId) {
+            const reason = prompt('Please provide a reason for rejection:');
+            if (reason) {
+                // In production, call API
+                alert('Withdrawal rejected successfully!');
+                loadWithdrawalRequests();
+            }
+        }
+
+        // Export transactions
+        function exportTransactions() {
+            // In production, this would generate and download CSV
+            alert('Export feature will be available when there are transactions to export');
+        }
+
+        // Admin logout
+        function adminLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('tete_admin_token');
+                localStorage.removeItem('tete_admin_user');
+                window.location.href = '/admin/login.html';
+            }
+        }
+
+        // Initialize
+        loadFinanceData();
+        
+        // Refresh data every 30 seconds
+        setInterval(loadFinanceData, 30000);
+    </script>
+</body>
+</html>

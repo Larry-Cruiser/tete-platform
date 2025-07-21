@@ -35,7 +35,10 @@ router.get('/banks', async (req, res) => {
             return res.status(500).json({ error: 'Failed to fetch banks' });
         }
 
-        res.json({ banks: banks.data });
+        // Sort banks alphabetically by name
+        const sortedBanks = banks.data.sort((a, b) => a.name.localeCompare(b.name));
+
+        res.json({ banks: sortedBanks });
     } catch (error) {
         console.error('Get banks error:', error);
         res.status(500).json({ error: 'Server error' });
