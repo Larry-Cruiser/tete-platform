@@ -6,14 +6,34 @@ class WalletController {
         try {
             const userId = req.user.id;
 
-            const { data: wallet, error } = await supabaseAdmin
+            // First check if wallet exists
+            let { data: wallet, error } = await supabaseAdmin
                 .from('wallets')
                 .select('*')
                 .eq('user_id', userId)
                 .single();
 
-            if (error) {
-                return res.status(404).json({ error: 'Wallet not found' });
+            // If wallet doesn't exist, create it
+            if (error && error.code === 'PGRST116') { // Not found error
+                const { data: newWallet, error: createError } = await supabaseAdmin
+                    .from('wallets')
+                    .insert({
+                        user_id: userId,
+                        balance: 0,
+                        total_deposited: 0,
+                        total_withdrawn: 0
+                    })
+                    .select()
+                    .single();
+
+                if (createError) {
+                    console.error('Failed to create wallet:', createError);
+                    return res.status(500).json({ error: 'Failed to create wallet' });
+                }
+
+                wallet = newWallet;
+            } else if (error) {
+                return res.status(500).json({ error: 'Database error' });
             }
 
             res.json({ wallet });
@@ -33,6 +53,17 @@ class WalletController {
                 return res.status(400).json({ 
                     error: 'Minimum deposit amount is ₦100' 
                 });
+            }
+
+            // First get the user's wallet
+            const { data: wallet, error: walletError } = await supabaseAdmin
+                .from('wallets')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+
+            if (walletError) {
+                return res.status(404).json({ error: 'Wallet not found' });
             }
 
             // Create transaction reference
@@ -61,14 +92,14 @@ class WalletController {
                 .from('transactions')
                 .insert({
                     user_id: userId,
-                    wallet_id: req.user.wallets.id,
+                    wallet_id: wallet.id,
                     type: 'deposit',
                     amount,
                     status: 'pending',
                     reference,
                     paystack_reference: paystackResponse.data.reference,
-                    balance_before: req.user.wallets.balance,
-                    balance_after: req.user.wallets.balance
+                    balance_before: wallet.balance,
+                    balance_after: wallet.balance
                 });
 
             res.json({
@@ -158,7 +189,17 @@ class WalletController {
         try {
             const userId = req.user.id;
             const { amount } = req.body;
-            const wallet = req.user.wallets;
+            
+            // Get the user's wallet first
+            const { data: wallet, error: walletError } = await supabaseAdmin
+                .from('wallets')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+
+            if (walletError) {
+                return res.status(404).json({ error: 'Wallet not found' });
+            }
 
             // Validations
             if (amount < 1000) {

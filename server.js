@@ -20,7 +20,16 @@ app.use(cors());
 app.use(compression());
 
 // PART 2: Body Parsing and Static Files
-app.use(express.json());
+// IMPORTANT: express.json() must come BEFORE routes that need JSON parsing
+// But express.raw() for webhooks needs to be specific
+app.use((req, res, next) => {
+    // Skip JSON parsing for webhook endpoint
+    if (req.path === '/api/webhooks/paystack') {
+        next();
+    } else {
+        express.json()(req, res, next);
+    }
+});
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -42,6 +51,9 @@ const wagerRoutes = require('./server/routes/wager');
 const chatRoutes = require('./server/routes/chat');
 const generalRoutes = require('./server/routes/general');
 
+// Import Supabase for webhook processing
+const { supabaseAdmin } = require('./server/config/supabase');
+
 // PART 6: Apply API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/wallet', walletRoutes);
@@ -49,29 +61,210 @@ app.use('/api/wagers', wagerRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/general', generalRoutes);
 
-// PART 7: Paystack Webhook
-app.post('/api/webhooks/paystack', express.raw({ type: 'application/json' }), (req, res) => {
-    const hash = require('crypto')
-        .createHmac('sha512', process.env.PAYSTACK_SECRET_KEY)
-        .update(JSON.stringify(req.body))
-        .digest('hex');
-    
-    if (hash !== req.headers['x-paystack-signature']) {
-        return res.status(401).send('Unauthorized');
-    }
+// PART 7: Paystack Webhook - COMPLETE VERSION
+app.post('/api/webhooks/paystack', express.raw({ type: 'application/json' }), async (req, res) => {
+    try {
+        // Verify webhook signature
+        const crypto = require('crypto');
+        const hash = crypto
+            .createHmac('sha512', process.env.PAYSTACK_SECRET_KEY)
+            .update(req.body)
+            .digest('hex');
+        
+        if (hash !== req.headers['x-paystack-signature']) {
+            console.log('Invalid webhook signature');
+            return res.status(401).send('Unauthorized');
+        }
 
-    const event = req.body;
-    console.log('Paystack webhook:', event);
-    
-    switch(event.event) {
-        case 'charge.success':
-            break;
-        case 'transfer.success':
-            break;
-    }
+        // Parse the body since we received it as raw
+        const event = JSON.parse(req.body.toString());
+        console.log('Paystack webhook event:', event.event);
+        
+        switch(event.event) {
+            case 'charge.success':
+                // Handle successful payment
+                await handleSuccessfulPayment(event.data);
+                break;
+                
+            case 'transfer.success':
+                // Handle successful withdrawal
+                await handleSuccessfulTransfer(event.data);
+                break;
+                
+            case 'transfer.failed':
+            case 'transfer.reversed':
+                // Handle failed withdrawal
+                await handleFailedTransfer(event.data);
+                break;
+        }
 
-    res.status(200).send('OK');
+        res.status(200).send('OK');
+    } catch (error) {
+        console.error('Webhook processing error:', error);
+        res.status(500).send('Webhook processing failed');
+    }
 });
+
+// Helper function to handle successful payments
+async function handleSuccessfulPayment(data) {
+    try {
+        const reference = data.reference;
+        const amount = data.amount / 100; // Convert from kobo to naira
+        
+        console.log(`Processing successful payment: ${reference}, Amount: ₦${amount}`);
+        
+        // Get the pending transaction
+        const { data: transaction, error: txError } = await supabaseAdmin
+            .from('transactions')
+            .select('*')
+            .eq('paystack_reference', reference)
+            .eq('status', 'pending')
+            .single();
+
+        if (txError || !transaction) {
+            console.error('Transaction not found:', reference);
+            return;
+        }
+
+        // Get user's wallet
+        const { data: wallet, error: walletError } = await supabaseAdmin
+            .from('wallets')
+            .select('*')
+            .eq('user_id', transaction.user_id)
+            .single();
+
+        if (walletError || !wallet) {
+            console.error('Wallet not found for user:', transaction.user_id);
+            return;
+        }
+
+        // Calculate new balance
+        const newBalance = parseFloat(wallet.balance) + amount;
+
+        // Update wallet balance
+        const { error: updateWalletError } = await supabaseAdmin
+            .from('wallets')
+            .update({
+                balance: newBalance,
+                total_deposited: parseFloat(wallet.total_deposited || 0) + amount,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', wallet.id);
+
+        if (updateWalletError) {
+            console.error('Failed to update wallet:', updateWalletError);
+            return;
+        }
+
+        // Update transaction status
+        const { error: updateTxError } = await supabaseAdmin
+            .from('transactions')
+            .update({
+                status: 'completed',
+                balance_after: newBalance,
+                completed_at: new Date().toISOString()
+            })
+            .eq('id', transaction.id);
+
+        if (updateTxError) {
+            console.error('Failed to update transaction:', updateTxError);
+            return;
+        }
+
+        console.log(`✅ Payment processed successfully: ${reference}`);
+        
+        // Create notification for user (optional)
+        await supabaseAdmin
+            .from('notifications')
+            .insert({
+                user_id: transaction.user_id,
+                title: 'Deposit Successful',
+                message: `Your deposit of ₦${amount.toLocaleString()} has been credited to your wallet.`,
+                type: 'success'
+            });
+
+    } catch (error) {
+        console.error('Error handling successful payment:', error);
+    }
+}
+
+// Helper function to handle successful transfers (withdrawals)
+async function handleSuccessfulTransfer(data) {
+    try {
+        const reference = data.reference;
+        console.log(`Processing successful transfer: ${reference}`);
+        
+        // Update transaction status to completed
+        const { error } = await supabaseAdmin
+            .from('transactions')
+            .update({
+                status: 'completed',
+                completed_at: new Date().toISOString()
+            })
+            .eq('reference', reference)
+            .eq('status', 'pending');
+
+        if (error) {
+            console.error('Failed to update transfer transaction:', error);
+        }
+        
+        console.log(`✅ Transfer processed successfully: ${reference}`);
+    } catch (error) {
+        console.error('Error handling successful transfer:', error);
+    }
+}
+
+// Helper function to handle failed transfers
+async function handleFailedTransfer(data) {
+    try {
+        const reference = data.reference;
+        console.log(`Processing failed transfer: ${reference}`);
+        
+        // Get the transaction
+        const { data: transaction, error: txError } = await supabaseAdmin
+            .from('transactions')
+            .select('*')
+            .eq('reference', reference)
+            .single();
+
+        if (txError || !transaction) {
+            console.error('Transaction not found:', reference);
+            return;
+        }
+
+        // Refund the amount back to wallet
+        const { data: wallet, error: walletError } = await supabaseAdmin
+            .from('wallets')
+            .select('*')
+            .eq('user_id', transaction.user_id)
+            .single();
+
+        if (!walletError && wallet) {
+            const refundedBalance = parseFloat(wallet.balance) + parseFloat(transaction.amount);
+            
+            await supabaseAdmin
+                .from('wallets')
+                .update({
+                    balance: refundedBalance,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', wallet.id);
+        }
+
+        // Update transaction status
+        await supabaseAdmin
+            .from('transactions')
+            .update({
+                status: 'failed',
+                completed_at: new Date().toISOString()
+            })
+            .eq('reference', reference);
+
+        console.log(`❌ Transfer failed and refunded: ${reference}`);
+    } catch (error) {
+        console.error('Error handling failed transfer:', error);
+    }
+}
 
 // PART 8: Health Check Endpoint
 app.get('/api/health', (req, res) => {
@@ -117,8 +310,7 @@ if (require.main === module) {
         console.log(`\n🎮 Ready to handle wagers!`);
     });
 
-    // PART 11B: Supabase Real-time - COMMENTED OUT DUE TO ERROR
-    
+    // PART 11B: Supabase Real-time
     const { supabaseAdmin } = require('./server/config/supabase');
     supabaseAdmin
         .channel('chat-messages')
@@ -129,7 +321,6 @@ if (require.main === module) {
             }
         )
         .subscribe();
-    
 }
 
 // Export for Vercel
