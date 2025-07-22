@@ -536,3 +536,171 @@ select.form-input option,
     color: var(--white);
     padding: 10px;
 }
+/* Profile Information Box */
+.profile-box, .profile-info, .user-info {
+    background: linear-gradient(145deg, 
+        rgba(26,26,26,0.9), 
+        rgba(10,10,10,0.9)
+    );
+    border: 2px solid rgba(231, 76, 60, 0.3);
+    border-radius: 15px;
+    padding: 25px;
+    margin: 20px 0;
+    box-shadow: 
+        0 10px 30px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+}
+
+.profile-box h3, .profile-info h3 {
+    color: var(--primary);
+    margin-bottom: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Back to Dashboard Button */
+.back-btn, .btn-back, .back-button, .btn-dashboard {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 30px;
+    background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+    color: var(--white) !important;
+    text-decoration: none;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 
+        0 10px 20px rgba(231, 76, 60, 0.3),
+        0 6px 6px rgba(0,0,0,0.23);
+}
+
+.back-btn:hover, .btn-back:hover, .back-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 15px 30px rgba(231, 76, 60, 0.4),
+        0 10px 10px rgba(0,0,0,0.3);
+}
+
+/* Previous Page Button */
+.prev-btn, .btn-prev, .previous-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 25px;
+    background: linear-gradient(145deg, var(--burnt-orange), var(--burnt-orange-dark));
+    color: var(--white);
+    border: none;
+    border-radius: 50px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.prev-btn::before, .btn-prev::before {
+    content: '←';
+    font-size: 18px;
+}
+
+/* Bottom Navigation / Action Buttons */
+.bottom-nav, .action-buttons, .bottom-actions {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, 
+        rgba(15,15,15,0.98), 
+        rgba(0,0,0,0.98)
+    );
+    border-top: 2px solid rgba(231, 76, 60, 0.3);
+    padding: 15px 20px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.8);
+    z-index: 100;
+}
+
+.bottom-nav button, .bottom-nav .btn,
+.action-buttons button, .action-buttons .btn {
+    background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+    color: var(--white) !important;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+}
+
+.bottom-nav button:hover, .action-buttons button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
+}
+
+/* Secondary Button Style */
+.btn-secondary {
+    background: linear-gradient(145deg, var(--charcoal-medium), var(--charcoal-light));
+    border: 2px solid var(--primary);
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+}
+
+/* Success Button */
+.btn-success {
+    background: linear-gradient(145deg, var(--green), var(--green-dark));
+    box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+}
+
+/* Info Section Boxes */
+.info-section, .info-box {
+    background: rgba(26,26,26,0.6);
+    border: 1px solid rgba(231, 76, 60, 0.2);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px 0;
+}
+
+/* Make sure text is visible */
+.profile-box p, .info-box p, .info-section p {
+    color: var(--grey-light);
+    margin: 5px 0;
+}
+
+.profile-box strong, .info-box strong {
+    color: var(--white);
+    font-weight: 600;
+}
+
+/* Fix for buttons that might be using <a> tags */
+a.btn, a.button {
+    text-decoration: none !important;
+    display: inline-block;
+}
+
+/* Ensure proper spacing for fixed bottom nav */
+body {
+    padding-bottom: 80px; /* Prevents content from being hidden behind bottom nav */
+}
+
+/* Mobile responsive bottom nav */
+@media (max-width: 768px) {
+    .bottom-nav, .action-buttons {
+        padding: 10px 15px;
+        gap: 10px;
+    }
+    
+    .bottom-nav button, .action-buttons button {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+}
