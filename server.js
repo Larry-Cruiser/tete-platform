@@ -5,79 +5,52 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 
-// Temporarily disable dotenv to debug
-// if (process.env.NODE_ENV !== 'production') {
-//     require('dotenv').config();
-// }
+// Only load dotenv in development
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
 
 const app = express();
 
-// Security middleware
+// PART 1: Security and Basic Middleware
 app.use(helmet({
     contentSecurityPolicy: false,
 }));
 app.use(cors());
 app.use(compression());
 
-// Body parsing middleware
+// PART 2: Body Parsing and Static Files
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Static files - IMPORTANT: This serves your public folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-// View engine setup
+// PART 3: View Engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Rate limiting
+// PART 4: Rate Limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100
 });
 app.use('/api/', limiter);
 
-// Import routes with error handling
-let authRoutes, walletRoutes, wagerRoutes, chatRoutes, generalRoutes;
+// PART 5: Import Route Files
+const authRoutes = require('./server/routes/auth');
+const walletRoutes = require('./server/routes/wallet');
+const wagerRoutes = require('./server/routes/wager');
+const chatRoutes = require('./server/routes/chat');
+const generalRoutes = require('./server/routes/general');
 
-try {
-    console.log('Loading auth routes...');
-    authRoutes = require('./server/routes/auth');
-    console.log('Loading wallet routes...');
-    walletRoutes = require('./server/routes/wallet');
-    console.log('Loading wager routes...');
-    wagerRoutes = require('./server/routes/wager');
-    console.log('Loading chat routes...');
-    chatRoutes = require('./server/routes/chat');
-    console.log('Loading general routes...');
-    generalRoutes = require('./server/routes/general');
-    console.log('All routes loaded successfully');
-} catch (error) {
-    console.error('Error loading routes:', error);
-    throw error;
-}
+// PART 6: Apply API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/wallet', walletRoutes);
+app.use('/api/wagers', wagerRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/general', generalRoutes);
 
-// API Routes with error handling
-try {
-    console.log('Attaching auth routes...');
-    app.use('/api/auth', authRoutes);
-    console.log('Attaching wallet routes...');
-    app.use('/api/wallet', walletRoutes);
-    console.log('Attaching wager routes...');
-    app.use('/api/wagers', wagerRoutes);
-    console.log('Attaching chat routes...');
-    app.use('/api/chat', chatRoutes);
-    console.log('Attaching general routes...');
-    app.use('/api/general', generalRoutes);
-    console.log('All routes attached successfully');
-} catch (error) {
-    console.error('Error attaching routes:', error);
-    throw error;
-}
-
-// Paystack webhook endpoint
+// PART 7: Paystack Webhook
 app.post('/api/webhooks/paystack', express.raw({ type: 'application/json' }), (req, res) => {
-    // Verify webhook signature
     const hash = require('crypto')
         .createHmac('sha512', process.env.PAYSTACK_SECRET_KEY)
         .update(JSON.stringify(req.body))
@@ -87,24 +60,20 @@ app.post('/api/webhooks/paystack', express.raw({ type: 'application/json' }), (r
         return res.status(401).send('Unauthorized');
     }
 
-    // Process webhook
     const event = req.body;
     console.log('Paystack webhook:', event);
     
-    // Handle different event types
     switch(event.event) {
         case 'charge.success':
-            // Handle successful payment
             break;
         case 'transfer.success':
-            // Handle successful withdrawal
             break;
     }
 
     res.status(200).send('OK');
 });
 
-// Health check endpoint
+// PART 8: Health Check Endpoint
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'OK', 
@@ -120,25 +89,17 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Serve index.html for all non-API routes (IMPORTANT for single-page app behavior)
-app.get('*', (req, res) => {
-    // Don't serve index.html for API routes
-    if (req.path.startsWith('/api')) {
-        return res.status(404).json({ error: 'API route not found' });
-    }
-    
-    // Check if file exists in public folder
-    const filePath = path.join(__dirname, 'public', req.path);
-    const fs = require('fs');
-    
-    // If it's a file that exists, it will be served by express.static above
-    // Otherwise, serve index.html
-    if (!fs.existsSync(filePath)) {
-        res.sendFile(path.join(__dirname, 'public', 'index.html'));
-    }
-});
+// PART 9: Catch-All Route - ALTERNATIVE VERSION
+// Temporarily comment this out - we'll handle it differently
+// app.get('/*', (req, res) => {
+//     if (req.path.startsWith('/api')) {
+//         return res.status(404).json({ error: 'API route not found' });
+//     }
+//     
+//     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// });
 
-// Error handling middleware
+// PART 10: Error Handling Middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ 
@@ -147,7 +108,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-// For local development only
+// PART 11: Server Start and Supabase
 if (require.main === module) {
     const PORT = process.env.PORT || 3000;
     const server = app.listen(PORT, () => {
@@ -157,20 +118,19 @@ if (require.main === module) {
         console.log(`\n🎮 Ready to handle wagers!`);
     });
 
-    // Set up Supabase real-time (for live updates)
+    // PART 11B: Supabase Real-time - COMMENTED OUT DUE TO ERROR
+    
     const { supabaseAdmin } = require('./server/config/supabase');
-
-    // Listen for new messages
     supabaseAdmin
         .channel('chat-messages')
         .on('postgres_changes', 
             { event: 'INSERT', schema: 'public', table: 'chat_messages' }, 
             (payload) => {
                 console.log('New message:', payload.new);
-                // In production, emit via WebSocket to connected clients
             }
         )
         .subscribe();
+    
 }
 
 // Export for Vercel
