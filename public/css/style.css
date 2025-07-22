@@ -704,3 +704,124 @@ body {
         font-size: 14px;
     }
 }
+/* Wagers Table Styling */
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    margin: 20px 0;
+    background: rgba(26,26,26,0.6);
+    border-radius: 10px;
+    border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+.wagers-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+.wagers-table thead {
+    background: linear-gradient(145deg, var(--charcoal-light), var(--charcoal));
+    border-bottom: 2px solid var(--primary);
+}
+
+.wagers-table th {
+    padding: 15px 10px;
+    text-align: left;
+    color: var(--white);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+.wagers-table tbody tr {
+    border-bottom: 1px solid rgba(231, 76, 60, 0.1);
+    transition: all 0.3s ease;
+}
+
+.wagers-table tbody tr:hover {
+    background: rgba(231, 76, 60, 0.05);
+}
+
+.wagers-table td {
+    padding: 12px 10px;
+    color: var(--grey-light);
+}
+
+.wager-title {
+    font-weight: 500;
+    color: var(--white);
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wager-amount {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.wager-creator {
+    color: var(--gold);
+}
+
+.btn-join {
+    background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-join:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+}
+
+.no-wagers {
+    text-align: center;
+    padding: 40px !important;
+    color: var(--grey-medium);
+}
+
+/* Fix Category Dropdown - Black text on white background */
+#categoryFilter,
+.filter-select,
+select {
+    background: white !important;
+    color: black !important;
+    border: 2px solid var(--primary) !important;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#categoryFilter option,
+.filter-select option,
+select option {
+    background: white !important;
+    color: black !important;
+    padding: 10px;
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+    .table-wrapper {
+        border-radius: 0;
+    }
+    
+    .wagers-table {
+        font-size: 14px;
+    }
+    
+    .wagers-table th,
+    .wagers-table td {
+        padding: 8px 5px;
+    }
+}

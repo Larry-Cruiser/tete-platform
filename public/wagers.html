@@ -106,133 +106,71 @@
             min-width: 150px;
         }
 
-        /* Main Content */
-        .wagers-main {
+        /* Table Styles */
+        .table-wrapper {
             max-width: 1400px;
             margin: 40px auto;
             padding: 0 20px;
         }
 
-        .wagers-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-
-        .wager-card {
+        .wagers-table {
+            width: 100%;
+            border-collapse: collapse;
             background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
             border: 1px solid rgba(231,76,60,0.2);
             border-radius: 20px;
-            padding: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
             overflow: hidden;
         }
 
-        .wager-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--burnt-orange));
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
+        .wagers-table th {
+            padding: 15px;
+            color: var(--white);
+            font-weight: 600;
+            text-align: left;
+            border-bottom: 1px solid rgba(231,76,60,0.2);
+            background: rgba(255,255,255,0.05);
         }
 
-        .wager-card:hover::before {
-            transform: scaleX(1);
+        .wagers-table td {
+            padding: 15px;
+            color: var(--grey-light);
+            font-size: 14px;
+            border-bottom: 1px solid rgba(231,76,60,0.1);
         }
 
-        .wager-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
-            border-color: var(--primary);
-        }
-
-        .wager-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-
-        .wager-info {
-            flex: 1;
+        .wager-row:hover {
+            background: rgba(231,76,60,0.1);
+            cursor: pointer;
         }
 
         .wager-title {
-            font-size: 18px;
             color: var(--white);
             font-weight: 600;
-            margin-bottom: 8px;
-            line-height: 1.3;
         }
 
-        .wager-meta {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 5px;
+        .tier-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .tier-badge.standard { background: rgba(231,76,60,0.2); color: var(--primary); }
+        .tier-badge.oga { background: rgba(243,156,18,0.2); color: var(--gold); }
+        .tier-badge.boss { background: rgba(52,152,219,0.2); color: var(--blue); }
+        .tier-badge.chairman { background: rgba(46,204,113,0.2); color: var(--green); }
+        .tier-badge.odogwu { background: rgba(155,89,182,0.2); color: var(--purple); }
+
+        .wager-amount {
+            color: var(--primary);
+            font-weight: 700;
         }
 
         .wager-creator {
             color: var(--grey);
-            font-size: 14px;
         }
 
-        .wager-category {
-            color: var(--gold);
-            font-size: 13px;
-            padding: 3px 10px;
-            background: rgba(243,156,18,0.1);
-            border-radius: 15px;
-        }
-
-        .wager-amount {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--primary);
-            text-align: right;
-        }
-
-        .wager-description {
-            color: var(--grey-light);
-            font-size: 14px;
-            line-height: 1.5;
-            margin-bottom: 15px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .wager-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 15px;
-            border-top: 1px solid rgba(231,76,60,0.1);
-        }
-
-        .wager-type {
-            display: inline-block;
-            padding: 5px 12px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 20px;
-            font-size: 12px;
-            color: var(--grey-light);
-        }
-
-        .wager-time {
-            color: var(--grey);
-            font-size: 13px;
-        }
-
-        .join-button {
+        .btn-join {
             padding: 8px 20px;
             background: linear-gradient(145deg, var(--primary), var(--primary-dark));
             border: none;
@@ -243,27 +181,15 @@
             transition: all 0.3s ease;
         }
 
-        .join-button:hover {
+        .btn-join:hover {
             transform: scale(1.05);
             box-shadow: 0 5px 20px rgba(231,76,60,0.3);
         }
 
-        /* Empty State */
-        .empty-state {
+        .no-wagers {
             text-align: center;
-            padding: 80px 20px;
-        }
-
-        .empty-state h3 {
-            font-size: 24px;
-            color: var(--white);
-            margin-bottom: 15px;
-        }
-
-        .empty-state p {
+            padding: 40px;
             color: var(--grey);
-            font-size: 16px;
-            margin-bottom: 30px;
         }
 
         /* Loading State */
@@ -367,9 +293,41 @@
                 width: 100%;
             }
 
-            .wagers-grid {
-                grid-template-columns: 1fr;
+            .wagers-table {
+                display: block;
+                overflow-x: auto;
             }
+
+            .wagers-table thead {
+                display: none;
+            }
+
+            .wagers-table tbody, .wagers-table tr {
+                display: block;
+            }
+
+            .wagers-table tr {
+                margin-bottom: 20px;
+                border-bottom: 1px solid rgba(231,76,60,0.1);
+            }
+
+            .wagers-table td {
+                display: block;
+                text-align: right;
+                padding: 10px 15px;
+                position: relative;
+            }
+
+            .wagers-table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 15px;
+                font-weight: 600;
+                color: var(--white);
+            }
+
+            .wagers-table td[data-label="Title"] { font-size: 16px; font-weight: 600; }
+            .wagers-table td[data-label="Amount"] { color: var(--primary); font-weight: 700; }
         }
     </style>
 </head>
@@ -427,18 +385,28 @@
                 </div>
             </div>
 
-            <!-- Wagers Grid -->
-            <div class="wagers-grid" id="wagersGrid" style="display: none;">
-                <!-- Wagers will be loaded here -->
-            </div>
-
-            <!-- Empty State -->
-            <div class="empty-state" id="emptyState" style="display: none;">
-                <h3>No Wagers Found</h3>
-                <p>Be the first to create a wager in this category!</p>
-                <button class="btn-3d" onclick="window.location.href='/create-wager.html'">
-                    Create Wager
-                </button>
+            <!-- Wagers Table -->
+            <div class="wagers-container">
+                <div class="table-wrapper">
+                    <table class="wagers-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Tier</th>
+                                <th>Category</th>
+                                <th>Sub-Category</th>
+                                <th>Game Type</th>
+                                <th>Amount</th>
+                                <th>Creator</th>
+                                <th>Deadline</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wagersTableBody">
+                            <!-- Wagers will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Pagination -->
@@ -500,8 +468,7 @@
             
             // Show loading state
             document.getElementById('loadingState').style.display = 'block';
-            document.getElementById('wagersGrid').style.display = 'none';
-            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('wagersTableBody').parentElement.parentElement.style.display = 'none';
             document.getElementById('pagination').style.display = 'none';
 
             try {
@@ -523,48 +490,10 @@
                 
                 // Hide loading state
                 document.getElementById('loadingState').style.display = 'none';
-
-                if (response.wagers.length === 0) {
-                    document.getElementById('emptyState').style.display = 'block';
-                    return;
-                }
+                document.getElementById('wagersTableBody').parentElement.parentElement.style.display = 'block';
 
                 // Display wagers
-                const grid = document.getElementById('wagersGrid');
-                grid.innerHTML = response.wagers.map(wager => `
-                    <div class="wager-card" onclick="viewWager('${wager.id}')">
-                        <div class="wager-header">
-                            <div class="wager-info">
-                                <h3 class="wager-title">${wager.title}</h3>
-                                <div class="wager-meta">
-                                    <span class="wager-creator">@${wager.creator.username}</span>
-                                    <span class="wager-category">${wager.wager_categories?.name || 'Custom'}</span>
-                                </div>
-                            </div>
-                            <div class="tier-badge ${wager.tier}">
-                                ${wager.tier.toUpperCase()}
-                            </div>
-                        </div>
-                        
-                        <div class="wager-amount">${formatCurrency(wager.amount)}</div>
-                        
-                        <p class="wager-description">${wager.creator_prediction}</p>
-                        
-                        <div class="wager-footer">
-                            <span class="wager-type">
-                                ${wager.challenge_type === 'type1' ? 'Simple' : 'Complex'}
-                            </span>
-                            <span class="wager-time">
-                                Decides: ${new Date(wager.decision_datetime).toLocaleDateString()}
-                            </span>
-                            <button class="join-button" onclick="event.stopPropagation(); joinWager('${wager.id}', '${wager.challenge_type}')">
-                                Join
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-
-                grid.style.display = 'grid';
+                displayWagers(response.wagers);
 
                 // Show pagination if needed
                 if (response.pagination.pages > 1) {
@@ -576,6 +505,35 @@
                 document.getElementById('loadingState').style.display = 'none';
                 showToast('Failed to load wagers', 'error');
             }
+        }
+
+        // Display wagers
+        function displayWagers(wagers) {
+            const tableBody = document.getElementById('wagersTableBody');
+            
+            if (!wagers || wagers.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="9" class="no-wagers">No wagers available</td></tr>';
+                return;
+            }
+            
+            // Sort by decision_date (earlier first)
+            wagers.sort((a, b) => new Date(a.decision_datetime) - new Date(b.decision_datetime));
+            
+            tableBody.innerHTML = wagers.map(wager => `
+                <tr class="wager-row" onclick="viewWager('${wager.id}')" data-label="Row">
+                    <td data-label="Title" class="wager-title">${wager.title}</td>
+                    <td data-label="Tier"><span class="tier-badge ${wager.tier.toLowerCase()}">${wager.tier}</span></td>
+                    <td data-label="Category">${wager.wager_categories?.name || 'N/A'}</td>
+                    <td data-label="Sub-Category">${wager.wager_categories?.subcategory_name || 'N/A'}</td>
+                    <td data-label="Game Type">${wager.challenge_type === 'type1' ? 'Simple' : 'Complex'}</td>
+                    <td data-label="Amount" class="wager-amount">₦${parseFloat(wager.amount).toLocaleString()}</td>
+                    <td data-label="Creator" class="wager-creator">@${wager.creator.username}</td>
+                    <td data-label="Deadline">${new Date(wager.decision_datetime).toLocaleDateString()}</td>
+                    <td data-label="Action">
+                        <button class="btn-join" onclick="event.stopPropagation(); joinWager('${wager.id}', '${wager.challenge_type}')">Join</button>
+                    </td>
+                </tr>
+            `).join('');
         }
 
         // Show pagination controls
