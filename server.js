@@ -89,15 +89,14 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// PART 9: Catch-All Route - ALTERNATIVE VERSION
-// Temporarily comment this out - we'll handle it differently
-// app.get('/*', (req, res) => {
-//     if (req.path.startsWith('/api')) {
-//         return res.status(404).json({ error: 'API route not found' });
-//     }
-//     
-//     res.sendFile(path.join(__dirname, 'public', 'index.html'));
-// });
+// PART 9: Catch-All Route - WORKING VERSION
+// Handle all other routes by serving index.html
+app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: 'API route not found' });
+    }
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // PART 10: Error Handling Middleware
 app.use((err, req, res, next) => {
