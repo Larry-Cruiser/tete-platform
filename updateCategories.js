@@ -37,9 +37,9 @@ async function insertCategoriesAndSubcategories() {
             subcategories: ['FIFA', 'Call of Duty', 'League of Legends', 'Others']
         },
         {
-            name: 'Boxing',
-            slug: 'boxing',
-            subcategories: ['Heavyweight', 'Lightweight', 'Nigerian Boxing', 'Others']
+            name: 'Combat ',
+            slug: 'combat sports',
+            subcategories: ['Boxing', 'UFC', 'Wrestling', 'Others']
         },
         {
             name: 'Reality TV',
