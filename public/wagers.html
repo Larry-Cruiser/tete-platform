@@ -131,6 +131,19 @@
             background: rgba(255,255,255,0.05);
         }
 
+        .wagers-table .sortable {
+            cursor: pointer;
+        }
+
+        .wagers-table .sort-icon {
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        .wagers-table .sort-icon.active {
+            color: var(--primary);
+        }
+
         .wagers-table td {
             padding: 15px;
             color: var(--grey-light);
@@ -392,13 +405,13 @@
                         <thead>
                             <tr>
                                 <th>Title</th>
-                                <th>Tier</th>
-                                <th>Category</th>
-                                <th>Sub-Category</th>
+                                <th class="sortable" onclick="sortTable('tier')">Tier <span class="sort-icon">↕</span></th>
+                                <th class="sortable" onclick="sortTable('category_name')">Category <span class="sort-icon">↕</span></th>
+                                <th class="sortable" onclick="sortTable('subcategory_name')">Sub-Category <span class="sort-icon">↕</span></th>
                                 <th>Game Type</th>
-                                <th>Amount</th>
-                                <th>Creator</th>
-                                <th>Deadline</th>
+                                <th class="sortable" onclick="sortTable('entry_amount')">Amount <span class="sort-icon">↕</span></th>
+                                <th class="sortable" onclick="sortTable('creator_username')">Creator <span class="sort-icon">↕</span></th>
+                                <th class="sortable" onclick="sortTable('decision_date')">Deadline <span class="sort-icon">↕</span></th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -443,6 +456,8 @@
         let currentTier = 'all';
         let currentCategory = '';
         let categories = [];
+        let currentSort = { column: 'decision_date', direction: 'asc' };
+        let allWagers = []; // Store all wagers for sorting
 
         // Load categories
         async function loadCategories() {
@@ -488,12 +503,25 @@
 
                 const response = await teteAPI.getWagers(params);
                 
+                // Store wagers for sorting
+                allWagers = response.wagers.map(wager => ({
+                    id: wager.id,
+                    title: wager.title,
+                    tier: wager.tier,
+                    category_name: wager.wager_categories?.name || 'N/A',
+                    subcategory_name: wager.wager_categories?.subcategory_name || 'N/A',
+                    challenge_type: wager.challenge_type,
+                    entry_amount: wager.amount,
+                    creator_username: wager.creator.username,
+                    decision_date: wager.decision_datetime
+                }));
+
                 // Hide loading state
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('wagersTableBody').parentElement.parentElement.style.display = 'block';
 
-                // Display wagers
-                displayWagers(response.wagers);
+                // Sort and display wagers
+                sortTable(currentSort.column);
 
                 // Show pagination if needed
                 if (response.pagination.pages > 1) {
@@ -507,6 +535,60 @@
             }
         }
 
+        // Sort function
+        function sortTable(column) {
+            // Toggle direction if same column
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+            
+            // Sort the wagers
+            const sortedWagers = [...allWagers].sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+                
+                // Handle different data types
+                if (column === 'entry_amount') {
+                    aVal = parseFloat(aVal);
+                    bVal = parseFloat(bVal);
+                } else if (column === 'decision_date') {
+                    aVal = new Date(aVal);
+                    bVal = new Date(bVal);
+                } else if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                
+                // Compare values
+                if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Update display
+            displayWagers(sortedWagers);
+            updateSortIcons();
+        }
+
+        // Update sort icons
+        function updateSortIcons() {
+            // Reset all icons
+            document.querySelectorAll('.sort-icon').forEach(icon => {
+                icon.textContent = '↕';
+                icon.classList.remove('active');
+            });
+            
+            // Update active column icon
+            const activeHeader = document.querySelector(`th[onclick*="${currentSort.column}"] .sort-icon`);
+            if (activeHeader) {
+                activeHeader.textContent = currentSort.direction === 'asc' ? '↑' : '↓';
+                activeHeader.classList.add('active');
+            }
+        }
+
         // Display wagers
         function displayWagers(wagers) {
             const tableBody = document.getElementById('wagersTableBody');
@@ -516,19 +598,16 @@
                 return;
             }
             
-            // Sort by decision_date (earlier first)
-            wagers.sort((a, b) => new Date(a.decision_datetime) - new Date(b.decision_datetime));
-            
             tableBody.innerHTML = wagers.map(wager => `
                 <tr class="wager-row" onclick="viewWager('${wager.id}')" data-label="Row">
                     <td data-label="Title" class="wager-title">${wager.title}</td>
                     <td data-label="Tier"><span class="tier-badge ${wager.tier.toLowerCase()}">${wager.tier}</span></td>
-                    <td data-label="Category">${wager.wager_categories?.name || 'N/A'}</td>
-                    <td data-label="Sub-Category">${wager.wager_categories?.subcategory_name || 'N/A'}</td>
+                    <td data-label="Category">${wager.category_name}</td>
+                    <td data-label="Sub-Category">${wager.subcategory_name}</td>
                     <td data-label="Game Type">${wager.challenge_type === 'type1' ? 'Simple' : 'Complex'}</td>
-                    <td data-label="Amount" class="wager-amount">₦${parseFloat(wager.amount).toLocaleString()}</td>
-                    <td data-label="Creator" class="wager-creator">@${wager.creator.username}</td>
-                    <td data-label="Deadline">${new Date(wager.decision_datetime).toLocaleDateString()}</td>
+                    <td data-label="Amount" class="wager-amount">₦${parseFloat(wager.entry_amount).toLocaleString()}</td>
+                    <td data-label="Creator" class="wager-creator">@${wager.creator_username}</td>
+                    <td data-label="Deadline">${new Date(wager.decision_date).toLocaleDateString()}</td>
                     <td data-label="Action">
                         <button class="btn-join" onclick="event.stopPropagation(); joinWager('${wager.id}', '${wager.challenge_type}')">Join</button>
                     </td>

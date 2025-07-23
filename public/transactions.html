@@ -557,7 +557,7 @@
                     <input type="date" class="date-input" id="dateTo" placeholder="To">
                 </div>
 
-                <button class="btn-3d" style="padding: 10px 30px; font-size: 14px;" onclick="applyFilters()">
+                <button id="applyFiltersBtn" class="btn-3d" style="padding: 10px 30px; font-size: 14px;" onclick="applyFilters()">
                     Apply Filters
                 </button>
             </div>
@@ -715,6 +715,7 @@
         let totalPages = 1;
         let transactions = [];
         let walletBalance = 0;
+        let allTransactions = [];
 
         // Load wallet balance
         async function loadWalletBalance() {
@@ -736,6 +737,7 @@
         async function loadTransactions(page = 1) {
             try {
                 const response = await teteAPI.getTransactions(page);
+                allTransactions = response.transactions; // Store all transactions
                 transactions = response.transactions;
                 totalPages = response.totalPages || 1;
                 currentPage = page;
@@ -749,11 +751,11 @@
         }
 
         // Display transactions
-        function displayTransactions() {
+        function displayTransactions(trans = transactions) {
             const tbody = document.getElementById('transactionsBody');
             const emptyState = document.getElementById('emptyState');
 
-            if (transactions.length === 0) {
+            if (trans.length === 0) {
                 tbody.innerHTML = '';
                 emptyState.style.display = 'block';
                 document.getElementById('pagination').style.display = 'none';
@@ -763,7 +765,7 @@
             emptyState.style.display = 'none';
             document.getElementById('pagination').style.display = 'flex';
 
-            tbody.innerHTML = transactions.map(tx => {
+            tbody.innerHTML = trans.map(tx => {
                 const typeClass = getTransactionTypeClass(tx.type);
                 const statusClass = getStatusClass(tx.status);
                 const amountClass = tx.amount >= 0 ? 'amount-positive' : 'amount-negative';
@@ -885,9 +887,44 @@
             pagination.innerHTML = html;
         }
 
-        // Apply filters
+        // Filter functionality
         function applyFilters() {
-            // This would filter transactions
+            const typeFilter = document.getElementById('typeFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const startDate = document.getElementById('dateFrom').value;
+            const endDate = document.getElementById('dateTo').value;
+            
+            // Filter the transactions
+            const filteredTransactions = allTransactions.filter(transaction => {
+                // Type filter
+                if (typeFilter && transaction.type !== typeFilter.toLowerCase()) {
+                    return false;
+                }
+                
+                // Status filter
+                if (statusFilter && transaction.status !== statusFilter.toLowerCase()) {
+                    return false;
+                }
+                
+                // Date filter
+                if (startDate) {
+                    const transDate = new Date(transaction.created_at);
+                    if (transDate < new Date(startDate)) return false;
+                }
+                
+                if (endDate) {
+                    const transDate = new Date(transaction.created_at);
+                    if (transDate > new Date(endDate)) return false;
+                }
+                
+                return true;
+            });
+            
+            transactions = filteredTransactions;
+            currentPage = 1;
+            totalPages = Math.ceil(filteredTransactions.length / 10); // Assuming 10 transactions per page
+            displayTransactions();
+            updatePagination();
             showToast('Filters applied', 'info');
         }
 
@@ -901,6 +938,12 @@
             const user = teteAPI.user;
             document.getElementById('withdrawBankInfo').textContent = 
                 `${user.bank_name || 'Not set'} - ${user.account_number || 'Not set'}`;
+            
+            // Update available balance
+            document.getElementById('availableBalance').textContent = `₦${walletBalance.toLocaleString('en-NG', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })}`;
             
             document.getElementById('withdrawModal').classList.add('show');
         }

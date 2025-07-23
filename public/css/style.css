@@ -8,7 +8,12 @@
     --charcoal: #0F0F0F;
     --charcoal-light: #1A1A1A;
     --charcoal-medium: #252525;
-    
+    :root {
+    /* Add these missing variables */
+    --primary-light: #FF6B6B;
+    --red: #E74C3C;  /* Same as primary */
+    --charcoal-dark: #050505;
+}
     /* Primary Accents - Red/Burnt Orange */
     --primary: #E74C3C;
     --primary-dark: #C0392B;
@@ -522,12 +527,6 @@ body {
     box-shadow: 0 0 20px rgba(255,107,53,0.2);
 }
 
-.form-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: rgba(255,255,255,0.05);
-    box-shadow: 0 0 20px rgba(204,85,0,0.2);
-}
 
 /* Select dropdown option styling */
 select.form-input option,
@@ -752,10 +751,9 @@ body {
 .wager-title {
     font-weight: 500;
     color: var(--white);
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    max-width: 300px;
+    white-space: normal;
+    word-wrap: break-word;
 }
 
 .wager-amount {
@@ -824,4 +822,134 @@ select option {
     .wagers-table td {
         padding: 8px 5px;
     }
+}
+/* Sortable table headers */
+.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.sortable:hover {
+    background: rgba(231, 76, 60, 0.1);
+}
+
+.sort-icon {
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 12px;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+}
+
+.sort-icon.active {
+    opacity: 1;
+    color: var(--primary);
+}
+
+/* Mobile Navigation Styling */
+.mobile-nav {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    background: rgba(0,0,0,0.9);
+}
+
+.mobile-nav-item {
+    color: var(--white) !important;
+    text-decoration: none;
+    padding: 10px 20px;
+    background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+    border-radius: 50px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+    display: inline-block;
+}
+
+.mobile-nav-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
+    color: var(--white) !important;
+}
+
+/* If you want them more spaced out */
+.mobile-nav-items {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Profile Dog Tag Style */
+.user-info {
+    background: linear-gradient(1145deg, #28a745, #218838);
+    border-radius: 15px;
+    padding: 20px 30px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 
+        0 10px 30px rgba(231, 76, 60, 0.4),
+        0 6px 10px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Avatar styling */
+.user-info .user-avatar {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    border: 2px solid rgba(255,255,255,0.3);
+}
+
+/* User details */
+.user-info .user-details h3 {
+    color: var(--white) !important;
+    margin: 0 0 5px 0;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.user-info .user-details p {
+    color: rgba(255,255,255,0.9) !important;
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Shine effect */
+.user-info::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(255,255,255,0.2) 50%,
+        transparent 70%
+    );
+    transform: rotate(45deg);
+}
+
+.user-info:hover::before {
+    animation: shine 0.6s ease;
+}
+
+@keyframes shine {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
 }
