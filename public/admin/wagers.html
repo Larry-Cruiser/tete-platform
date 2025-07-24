@@ -193,6 +193,20 @@
             white-space: nowrap;
         }
 
+        .category-tabs::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .category-tabs::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+        }
+
+        .category-tabs::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
         .category-tab {
             padding: 12px 20px;
             background: transparent;
@@ -204,6 +218,9 @@
             transition: all 0.3s ease;
             white-space: nowrap;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .category-tab:hover {
@@ -335,6 +352,7 @@
         .wager-id {
             color: var(--grey);
             font-size: 12px;
+            font-family: monospace;
         }
 
         .wager-title {
@@ -346,6 +364,39 @@
         .wager-category {
             font-size: 12px;
             color: var(--grey);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .tier-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .tier-badge.standard { 
+            background: rgba(231,76,60,0.2); 
+            color: var(--primary); 
+        }
+        .tier-badge.oga { 
+            background: rgba(243,156,18,0.2); 
+            color: var(--gold); 
+        }
+        .tier-badge.boss { 
+            background: rgba(52,152,219,0.2); 
+            color: #3498DB; 
+        }
+        .tier-badge.chairman { 
+            background: rgba(46,204,113,0.2); 
+            color: var(--green); 
+        }
+        .tier-badge.odogwu { 
+            background: rgba(155,89,182,0.2); 
+            color: #9B59B6; 
         }
 
         .status-badge {
@@ -405,6 +456,7 @@
         .amount-cell {
             font-weight: 600;
             font-size: 16px;
+            color: var(--primary);
         }
 
         .actions-cell {
@@ -426,6 +478,16 @@
         .action-button:hover {
             background: rgba(231,76,60,0.1);
             border-color: var(--primary);
+        }
+
+        .action-button.danger {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .action-button.danger:hover {
+            background: var(--primary);
+            color: var(--white);
         }
 
         .empty-state {
@@ -469,6 +531,10 @@
             .mobile-menu-toggle {
                 display: block;
             }
+
+            .wager-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .loading-spinner {
@@ -479,6 +545,46 @@
             border-top-color: var(--primary);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            border-top: 1px solid rgba(231,76,60,0.1);
+        }
+
+        .page-button {
+            padding: 8px 15px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 8px;
+            color: var(--grey);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .page-button:hover:not(:disabled) {
+            background: rgba(231,76,60,0.1);
+            border-color: var(--primary);
+            color: var(--white);
+        }
+
+        .page-button.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--white);
+        }
+
+        .page-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -573,18 +679,11 @@
             </div>
 
             <!-- Category Tabs -->
-            <div class="category-tabs">
-                <button class="category-tab active" onclick="filterByCategory('all')">All Bets</button>
-                <button class="category-tab" onclick="filterByCategory('football')">Football</button>
-                <button class="category-tab" onclick="filterByCategory('politics')">Politics</button>
-                <button class="category-tab" onclick="filterByCategory('basketball')">Basketball</button>
-                <button class="category-tab" onclick="filterByCategory('entertainment')">Entertainment</button>
-                <button class="category-tab" onclick="filterByCategory('esports')">Esports</button>
-                <button class="category-tab" onclick="filterByCategory('boxing')">Boxing</button>
-                <button class="category-tab" onclick="filterByCategory('reality-tv')">Reality TV</button>
-                <button class="category-tab" onclick="filterByCategory('current-events')">Current Events</button>
-                <button class="category-tab" onclick="filterByCategory('tech')">Tech</button>
-                <button class="category-tab" onclick="filterByCategory('custom')">Custom</button>
+            <div class="category-tabs" id="categoryTabs">
+                <button class="category-tab active" data-category="all" onclick="filterByCategory('all')">
+                    All Wagers
+                </button>
+                <!-- Categories will be populated here -->
             </div>
 
             <!-- Filters -->
@@ -617,9 +716,13 @@
                         
                         <select class="filter-select" id="typeFilter">
                             <option value="">All Types</option>
-                            <option value="type1">Type 1</option>
-                            <option value="type2">Type 2</option>
+                            <option value="type1">Type 1 (Simple)</option>
+                            <option value="type2">Type 2 (Complex)</option>
                         </select>
+
+                        <button class="btn-3d" onclick="applyFilters()" style="padding: 10px 20px; font-size: 14px;">
+                            Apply Filters
+                        </button>
                     </div>
                 </div>
             </div>
@@ -637,6 +740,7 @@
                             <tr>
                                 <th>Wager</th>
                                 <th>Status</th>
+                                <th>Tier</th>
                                 <th>Participants</th>
                                 <th>Amount</th>
                                 <th>Created</th>
@@ -646,24 +750,25 @@
                         </thead>
                         <tbody id="wagersBody">
                             <tr>
-                                <td colspan="7" style="text-align: center; padding: 60px;">
-                                    <div class="empty-state">
-                                        <div class="empty-icon">🎮</div>
-                                        <h3 style="color: var(--white); font-size: 1.2em; margin-bottom: 10px;">
-                                            No Wagers Yet
-                                        </h3>
-                                        <p>Wagers will appear here once users start creating them</p>
-                                    </div>
+                                <td colspan="8" style="text-align: center; padding: 40px;">
+                                    <div class="loading-spinner"></div>
+                                    <p style="margin-top: 20px; color: var(--grey);">Loading wagers...</p>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination" style="display: none;">
+                    <!-- Pagination controls will be inserted here -->
                 </div>
             </div>
         </main>
     </div>
 
     <script src="/js/api.js"></script>
+    <script src="/js/adminApi.js"></script>
     <script>
         // Check admin authentication
         function checkAdminAuth() {
@@ -689,74 +794,371 @@
             document.getElementById('adminSidebar').classList.toggle('mobile-open');
         }
 
+        // State management
+        let currentCategory = 'all';
+        let currentPage = 1;
+        let allWagers = [];
+        let filteredWagers = [];
+
+        // Initialize page
+        async function initializePage() {
+            try {
+                // Load categories first
+                await loadCategories();
+                
+                // Populate category tabs
+                populateCategoryTabs();
+                
+                // Load wager stats
+                await loadWagerStats();
+                
+                // Load wagers
+                await loadWagers();
+            } catch (error) {
+                console.error('Failed to initialize page:', error);
+            }
+        }
+
+        // Populate category tabs
+        function populateCategoryTabs() {
+            const tabsContainer = document.getElementById('categoryTabs');
+            const categories = getAllCategories();
+            
+            // Keep the "All Wagers" tab
+            const existingAllTab = tabsContainer.querySelector('[data-category="all"]');
+            
+            // Add category tabs
+            categories.forEach(cat => {
+                const tab = document.createElement('button');
+                tab.className = 'category-tab';
+                tab.dataset.category = cat.id;
+                tab.onclick = () => filterByCategory(cat.id);
+                tab.innerHTML = `${cat.icon} ${cat.name}`;
+                tabsContainer.appendChild(tab);
+            });
+        }
+
         // Load wager stats
         async function loadWagerStats() {
-            // In production, these would be API calls
-            document.getElementById('totalWagers').textContent = '0';
-            document.getElementById('activeWagers').textContent = '0';
-            document.getElementById('openWagers').textContent = '0';
-            document.getElementById('disputedWagers').textContent = '0';
-            document.getElementById('totalValue').textContent = '₦0';
+            try {
+                const stats = await adminApi.getWagerStats();
+                
+                document.getElementById('totalWagers').textContent = stats.total || '0';
+                document.getElementById('activeWagers').textContent = stats.active || '0';
+                document.getElementById('openWagers').textContent = stats.open || '0';
+                document.getElementById('disputedWagers').textContent = stats.disputed || '0';
+                document.getElementById('totalValue').textContent = `₦${(stats.totalValue || 0).toLocaleString()}`;
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+                // Set default values
+                document.getElementById('totalWagers').textContent = '0';
+                document.getElementById('activeWagers').textContent = '0';
+                document.getElementById('openWagers').textContent = '0';
+                document.getElementById('disputedWagers').textContent = '0';
+                document.getElementById('totalValue').textContent = '₦0';
+            }
         }
 
         // Filter by category
-        function filterByCategory(category) {
+        function filterByCategory(categoryId) {
+            currentCategory = categoryId;
+            currentPage = 1;
+            
             // Update active tab
             document.querySelectorAll('.category-tab').forEach(tab => {
-                tab.classList.remove('active');
+                tab.classList.toggle('active', tab.dataset.category === categoryId);
             });
-            event.target.classList.add('active');
             
-            // In production, filter wagers
-            console.log('Filtering by category:', category);
-            loadWagers();
+            // Apply filters
+            applyFilters();
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const tierFilter = document.getElementById('tierFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            
+            // Filter wagers
+            filteredWagers = allWagers.filter(wager => {
+                // Category filter
+                if (currentCategory !== 'all' && wager.category_id !== currentCategory) {
+                    return false;
+                }
+                
+                // Search filter
+                if (searchTerm) {
+                    const searchMatch = 
+                        wager.id.toLowerCase().includes(searchTerm) ||
+                        wager.title.toLowerCase().includes(searchTerm) ||
+                        wager.creator?.username?.toLowerCase().includes(searchTerm) ||
+                        wager.joiner?.username?.toLowerCase().includes(searchTerm);
+                    
+                    if (!searchMatch) return false;
+                }
+                
+                // Status filter
+                if (statusFilter && wager.status !== statusFilter) {
+                    return false;
+                }
+                
+                // Tier filter
+                if (tierFilter && wager.tier !== tierFilter) {
+                    return false;
+                }
+                
+                // Type filter
+                if (typeFilter && wager.challenge_type !== typeFilter) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            // Display filtered results
+            displayWagers();
         }
 
         // Load wagers
-        async function loadWagers() {
+        async function loadWagers(page = 1) {
+            currentPage = page;
+            const tbody = document.getElementById('wagersBody');
+            
+            try {
+                // Show loading state
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px;">
+                            <div class="loading-spinner"></div>
+                            <p style="margin-top: 20px; color: var(--grey);">Loading wagers...</p>
+                        </td>
+                    </tr>
+                `;
+                
+                const response = await adminApi.getWagers({ page, limit: 50 });
+                allWagers = response.wagers || [];
+                
+                // Apply filters
+                applyFilters();
+                
+            } catch (error) {
+                console.error('Failed to load wagers:', error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 60px;">
+                            <div class="empty-state">
+                                <div class="empty-icon">❌</div>
+                                <h3 style="color: var(--white); font-size: 1.2em; margin-bottom: 10px;">
+                                    Failed to Load Wagers
+                                </h3>
+                                <p>${error.message || 'Please try again later'}</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Display wagers
+        function displayWagers() {
             const tbody = document.getElementById('wagersBody');
             const countElement = document.getElementById('wagerCount');
             
-            // In production, this would fetch from API
-            // For now, show empty state
-            countElement.textContent = '0 wagers';
+            countElement.textContent = `${filteredWagers.length} wagers`;
             
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 60px;">
-                        <div class="empty-state">
-                            <div class="empty-icon">🎮</div>
-                            <h3 style="color: var(--white); font-size: 1.2em; margin-bottom: 10px;">
-                                No Wagers Yet
-                            </h3>
-                            <p>Wagers will appear here once users start creating them</p>
-                        </div>
-                    </td>
-                </tr>
-            `;
+            if (filteredWagers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 60px;">
+                            <div class="empty-state">
+                                <div class="empty-icon">🎮</div>
+                                <h3 style="color: var(--white); font-size: 1.2em; margin-bottom: 10px;">
+                                    No Wagers Found
+                                </h3>
+                                <p>Try adjusting your filters or search criteria</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Paginate results
+            const itemsPerPage = 20;
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedWagers = filteredWagers.slice(startIndex, endIndex);
+            
+            tbody.innerHTML = paginatedWagers.map(wager => {
+                // Get category info
+                const category = getCategoryById(wager.category_id);
+                const subcategory = wager.subcategory_id ? getSubcategoryById(wager.subcategory_id) : null;
+                const categoryDisplay = category ? 
+                    `${category.icon} ${category.name}${subcategory ? ' - ' + subcategory.name : ''}` : 
+                    'Unknown Category';
+                
+                // Format participants
+                const creatorInitials = wager.creator?.username?.substring(0, 2).toUpperCase() || 'CR';
+                const joinerInitials = wager.joiner?.username?.substring(0, 2).toUpperCase() || '?';
+                
+                // Format dates
+                const createdDate = new Date(wager.created_at).toLocaleDateString();
+                const decisionDate = new Date(wager.decision_datetime).toLocaleDateString();
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="wager-title">${escapeHtml(wager.title)}</div>
+                            <div class="wager-id">${wager.id.substring(0, 8)}...</div>
+                            <div class="wager-category">${categoryDisplay}</div>
+                        </td>
+                        <td>
+                            <span class="status-badge status-${wager.status}">
+                                ${formatStatus(wager.status)}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="tier-badge ${wager.tier}">
+                                ${wager.tier}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="participants">
+                                <div class="participant-avatar" title="${wager.creator?.username || 'Creator'}">
+                                    ${creatorInitials}
+                                </div>
+                                <span style="color: var(--grey);">vs</span>
+                                <div class="participant-avatar" title="${wager.joiner?.username || 'Waiting...'}">
+                                    ${joinerInitials}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="amount-cell">
+                            ₦${parseFloat(wager.amount).toLocaleString()}
+                        </td>
+                        <td>${createdDate}</td>
+                        <td>${decisionDate}</td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-button" onclick="viewWagerDetails('${wager.id}')">
+                                    View
+                                </button>
+                                ${wager.status === 'in_dispute' ? `
+                                    <button class="action-button" onclick="window.location.href='/admin/disputes.html?wager=${wager.id}'">
+                                        Resolve
+                                    </button>
+                                ` : ''}
+                                ${wager.status === 'open' || wager.status === 'in_progress' ? `
+                                    <button class="action-button danger" onclick="cancelWager('${wager.id}')">
+                                        Cancel
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Show pagination if needed
+            showPagination();
+        }
+
+        // Show pagination
+        function showPagination() {
+            const paginationDiv = document.getElementById('pagination');
+            const itemsPerPage = 20;
+            const totalPages = Math.ceil(filteredWagers.length / itemsPerPage);
+            
+            if (totalPages <= 1) {
+                paginationDiv.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            
+            // Previous button
+            html += `<button class="page-button" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                ← Previous
+            </button>`;
+            
+            // Page numbers
+            const maxPages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxPages / 2));
+            let endPage = Math.min(totalPages, startPage + maxPages - 1);
+            
+            if (endPage - startPage < maxPages - 1) {
+                startPage = Math.max(1, endPage - maxPages + 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="page-button ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">
+                    ${i}
+                </button>`;
+            }
+            
+            // Next button
+            html += `<button class="page-button" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                Next →
+            </button>`;
+            
+            paginationDiv.innerHTML = html;
+            paginationDiv.style.display = 'flex';
+        }
+
+        // Change page
+        function changePage(page) {
+            currentPage = page;
+            displayWagers();
+            
+            // Scroll to top of table
+            document.querySelector('.table-wrapper').scrollTop = 0;
+        }
+
+        // Format status
+        function formatStatus(status) {
+            const statusMap = {
+                'open': 'Open',
+                'in_progress': 'In Progress',
+                'pending_outcome': 'Pending',
+                'in_dispute': 'Disputed',
+                'completed': 'Completed',
+                'cancelled': 'Cancelled'
+            };
+            return statusMap[status] || status;
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
         }
 
         // View wager details
         function viewWagerDetails(wagerId) {
-            // In production, open modal or navigate to details
-            console.log('Viewing wager:', wagerId);
+            // For now, redirect to user-facing wager details
+            // In production, you might want a specific admin view
+            window.open(`/wager-details.html?id=${wagerId}`, '_blank');
         }
 
         // Cancel wager
-        function cancelWager(wagerId) {
-            if (confirm('Are you sure you want to cancel this wager? Funds will be refunded to participants.')) {
-                // In production, call API
-                alert('Wager cancelled successfully!');
-                loadWagers();
+        async function cancelWager(wagerId) {
+            if (!confirm('Are you sure you want to cancel this wager? Funds will be refunded to participants.')) {
+                return;
             }
-        }
-
-        // Force resolve wager
-        function forceResolve(wagerId) {
-            if (confirm('Are you sure you want to force resolve this wager? This should only be done in exceptional circumstances.')) {
-                // In production, call API
-                alert('Wager resolved!');
-                loadWagers();
+            
+            try {
+                await adminApi.cancelWager(wagerId, 'Admin cancelled');
+                showToast('Wager cancelled successfully!', 'success');
+                await loadWagers(currentPage);
+            } catch (error) {
+                showToast(error.message || 'Failed to cancel wager', 'error');
             }
         }
 
@@ -769,16 +1171,35 @@
             }
         }
 
-        // Search functionality
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            // In production, filter table or call API
-            console.log('Searching for:', searchTerm);
-        });
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 300));
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+        document.getElementById('tierFilter').addEventListener('change', applyFilters);
+        document.getElementById('typeFilter').addEventListener('change', applyFilters);
 
-        // Initialize
-        loadWagerStats();
-        loadWagers();
+        // Debounce helper
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Initialize page
+        initializePage();
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            loadWagerStats();
+            if (currentPage === 1) {
+                loadWagers(1);
+            }
+        }, 30000);
     </script>
 </body>
 </html>

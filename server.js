@@ -50,6 +50,7 @@ const walletRoutes = require('./server/routes/wallet');
 const wagerRoutes = require('./server/routes/wager');
 const chatRoutes = require('./server/routes/chat');
 const generalRoutes = require('./server/routes/general');
+const adminRoutes = require('./server/routes/admin');
 
 // Import Supabase for webhook processing
 const { supabaseAdmin } = require('./server/config/supabase');
@@ -60,6 +61,7 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/wagers', wagerRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/general', generalRoutes);
+app.use('/api/admin', adminRoutes);
 
 // PART 7: Paystack Webhook - COMPLETE VERSION
 app.post('/api/webhooks/paystack', express.raw({ type: 'application/json' }), async (req, res) => {

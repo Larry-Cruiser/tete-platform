@@ -262,6 +262,7 @@
             color: var(--grey);
             font-size: 13px;
             margin-bottom: 5px;
+            font-family: monospace;
         }
 
         .dispute-title {
@@ -276,6 +277,13 @@
             gap: 20px;
             color: var(--grey);
             font-size: 14px;
+        }
+
+        .dispute-category {
+            color: var(--grey-light);
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .dispute-urgency {
@@ -416,40 +424,10 @@
             margin-bottom: 20px;
         }
 
-        .evidence-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            background: rgba(255,255,255,0.03);
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-
-        .evidence-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: rgba(231,76,60,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
-        .evidence-details {
-            flex: 1;
-        }
-
-        .evidence-name {
-            color: var(--white);
-            font-weight: 500;
-            margin-bottom: 3px;
-        }
-
-        .evidence-info {
+        .evidence-empty {
+            text-align: center;
+            padding: 40px;
             color: var(--grey);
-            font-size: 13px;
         }
 
         /* Oracle Decision Section */
@@ -495,6 +473,11 @@
             border-color: var(--green);
         }
 
+        .decision-button.creator.selected {
+            background: rgba(39,174,96,0.3);
+            border-color: var(--green);
+        }
+
         .decision-button.joiner {
             background: rgba(52,152,219,0.1);
             border-color: rgba(52,152,219,0.3);
@@ -502,6 +485,11 @@
 
         .decision-button.joiner:hover {
             background: rgba(52,152,219,0.2);
+            border-color: #3498DB;
+        }
+
+        .decision-button.joiner.selected {
+            background: rgba(52,152,219,0.3);
             border-color: #3498DB;
         }
 
@@ -560,6 +548,57 @@
             box-shadow: 0 15px 40px rgba(231,76,60,0.5);
         }
 
+        .submit-decision-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading State */
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--grey);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--grey);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-title {
+            font-size: 1.5em;
+            color: var(--white);
+            margin-bottom: 10px;
+        }
+
+        .empty-message {
+            color: var(--grey);
+        }
+
         @media (max-width: 1024px) {
             .admin-sidebar {
                 transform: translateX(-100%);
@@ -575,6 +614,10 @@
             }
 
             .wager-details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .decision-buttons {
                 grid-template-columns: 1fr;
             }
         }
@@ -593,58 +636,16 @@
             .mobile-menu-toggle {
                 display: block;
             }
+
+            .oracle-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
-        .chat-history {
-            background: rgba(255,255,255,0.02);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-
-        .chat-message {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .chat-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: linear-gradient(145deg, var(--primary), var(--primary-dark));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--white);
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .chat-content {
-            flex: 1;
-        }
-
-        .chat-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 5px;
-        }
-
-        .chat-sender {
-            color: var(--white);
-            font-weight: 600;
-        }
-
-        .chat-time {
-            color: var(--grey);
-            font-size: 12px;
-        }
-
-        .chat-text {
-            color: var(--grey-light);
-            line-height: 1.5;
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
         }
     </style>
 </head>
@@ -706,216 +707,62 @@
 
             <!-- Oracle Stats -->
             <div class="oracle-stats">
-                <div class="oracle-stat-card urgent">
-                    <div class="oracle-stat-value">7</div>
+                <div class="oracle-stat-card" id="pendingCard">
+                    <div class="oracle-stat-value" id="pendingCount">
+                        <span class="loading-spinner"></span>
+                    </div>
                     <div class="oracle-stat-label">Pending Disputes</div>
                 </div>
                 <div class="oracle-stat-card">
-                    <div class="oracle-stat-value">342</div>
+                    <div class="oracle-stat-value" id="resolvedToday">
+                        <span class="loading-spinner"></span>
+                    </div>
                     <div class="oracle-stat-label">Resolved Today</div>
                 </div>
                 <div class="oracle-stat-card">
-                    <div class="oracle-stat-value">99.2%</div>
+                    <div class="oracle-stat-value" id="resolutionRate">
+                        <span class="loading-spinner"></span>
+                    </div>
                     <div class="oracle-stat-label">Resolution Rate</div>
                 </div>
                 <div class="oracle-stat-card">
-                    <div class="oracle-stat-value">14m</div>
+                    <div class="oracle-stat-value" id="avgResolutionTime">
+                        <span class="loading-spinner"></span>
+                    </div>
                     <div class="oracle-stat-label">Avg Resolution Time</div>
                 </div>
             </div>
 
             <!-- Dispute Tabs -->
             <div class="dispute-tabs">
-                <button class="dispute-tab active" onclick="switchTab('pending')">
+                <button class="dispute-tab active" onclick="switchTab('pending')" data-tab="pending">
                     Pending
-                    <span class="dispute-count">7</span>
+                    <span class="dispute-count" id="pendingTabCount">0</span>
                 </button>
-                <button class="dispute-tab" onclick="switchTab('inprogress')">
-                    In Progress
-                    <span class="dispute-count">3</span>
+                <button class="dispute-tab" onclick="switchTab('in_review')" data-tab="in_review">
+                    In Review
+                    <span class="dispute-count" id="inReviewTabCount">0</span>
                 </button>
-                <button class="dispute-tab" onclick="switchTab('resolved')">
+                <button class="dispute-tab" onclick="switchTab('resolved')" data-tab="resolved">
                     Resolved Today
                 </button>
-                <button class="dispute-tab" onclick="switchTab('contested')">
-                    Contested
-                    <span class="dispute-count">2</span>
+                <button class="dispute-tab" onclick="switchTab('all')" data-tab="all">
+                    All Disputes
                 </button>
             </div>
 
             <!-- Disputes List -->
             <div class="disputes-grid" id="disputesGrid">
-                <!-- Urgent Dispute -->
-                <div class="dispute-card urgent">
-                    <div class="dispute-header">
-                        <div class="dispute-info">
-                            <div class="dispute-id">DISPUTE #D7823</div>
-                            <h3 class="dispute-title">Man United vs Chelsea Match Result</h3>
-                            <div class="dispute-meta">
-                                <span>Wager: ₦50,000</span>
-                                <span>Type 1</span>
-                                <span>Created: 2 hours ago</span>
-                            </div>
-                        </div>
-                        <span class="dispute-urgency urgency-high">HIGH PRIORITY</span>
-                    </div>
-
-                    <!-- Wager Details -->
-                    <div class="wager-details-grid">
-                        <!-- Creator -->
-                        <div class="participant-section">
-                            <div class="participant-header">
-                                <div class="participant-avatar">CB</div>
-                                <div class="participant-info">
-                                    <div class="participant-name">ChampBet</div>
-                                    <div class="participant-role">Creator</div>
-                                </div>
-                            </div>
-                            
-                            <div class="prediction-box">
-                                <div class="prediction-label">Prediction</div>
-                                <div class="prediction-text">
-                                    "Man United will beat Chelsea in today's Premier League match"
-                                </div>
-                            </div>
-
-                            <div class="outcome-submitted">
-                                <span class="outcome-label">Submitted:</span>
-                                <span class="outcome-value outcome-win">I WIN</span>
-                            </div>
-                        </div>
-
-                        <!-- Joiner -->
-                        <div class="participant-section">
-                            <div class="participant-header">
-                                <div class="participant-avatar">JD</div>
-                                <div class="participant-info">
-                                    <div class="participant-name">JohnDoe23</div>
-                                    <div class="participant-role">Challenger</div>
-                                </div>
-                            </div>
-                            
-                            <div class="prediction-box">
-                                <div class="prediction-label">Position</div>
-                                <div class="prediction-text">
-                                    Betting against creator's prediction (Man United will NOT beat Chelsea)
-                                </div>
-                            </div>
-
-                            <div class="outcome-submitted">
-                                <span class="outcome-label">Submitted:</span>
-                                <span class="outcome-value outcome-win">I WIN</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Evidence Section -->
-                    <div class="evidence-section">
-                        <h4 class="evidence-title">Evidence & Match Result</h4>
-                        
-                        <div class="evidence-item">
-                            <div class="evidence-icon">⚽</div>
-                            <div class="evidence-details">
-                                <div class="evidence-name">Official Match Result</div>
-                                <div class="evidence-info">Chelsea 2 - 1 Man United (FT)</div>
-                            </div>
-                        </div>
-
-                        <div class="evidence-item">
-                            <div class="evidence-icon">📸</div>
-                            <div class="evidence-details">
-                                <div class="evidence-name">Screenshot Evidence</div>
-                                <div class="evidence-info">Submitted by JohnDoe23 - Premier League official website</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Chat History -->
-                    <div class="chat-history">
-                        <h4 class="evidence-title">Chat History</h4>
-                        
-                        <div class="chat-message">
-                            <div class="chat-avatar">CB</div>
-                            <div class="chat-content">
-                                <div class="chat-header">
-                                    <span class="chat-sender">ChampBet</span>
-                                    <span class="chat-time">3:45 PM</span>
-                                </div>
-                                <div class="chat-text">Man U is definitely winning this!</div>
-                            </div>
-                        </div>
-
-                        <div class="chat-message">
-                            <div class="chat-avatar">JD</div>
-                            <div class="chat-content">
-                                <div class="chat-header">
-                                    <span class="chat-sender">JohnDoe23</span>
-                                    <span class="chat-time">3:47 PM</span>
-                                </div>
-                                <div class="chat-text">Chelsea's form is better. Let's see!</div>
-                            </div>
-                        </div>
-
-                        <div class="chat-message">
-                            <div class="chat-avatar">CB</div>
-                            <div class="chat-content">
-                                <div class="chat-header">
-                                    <span class="chat-sender">ChampBet</span>
-                                    <span class="chat-time">6:02 PM</span>
-                                </div>
-                                <div class="chat-text">The ref was biased! That wasn't a fair match!</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Oracle Decision Section -->
-                    <div class="oracle-decision">
-                        <h3 class="oracle-decision-title">Oracle Decision</h3>
-                        
-                        <div class="decision-buttons">
-                            <div class="decision-button creator" onclick="selectWinner('creator')">
-                                <div class="decision-button-label">Award to</div>
-                                <div class="decision-button-text">ChampBet (Creator)</div>
-                            </div>
-                            
-                            <div class="decision-button joiner" onclick="selectWinner('joiner')">
-                                <div class="decision-button-label">Award to</div>
-                                <div class="decision-button-text">JohnDoe23 (Challenger)</div>
-                            </div>
-                        </div>
-
-                        <div class="decision-notes">
-                            <div class="decision-notes-label">Decision Notes (Required)</div>
-                            <textarea class="decision-notes-input" 
-                                      placeholder="Explain your decision based on the evidence provided..."
-                                      id="decisionNotes"></textarea>
-                        </div>
-
-                        <button class="submit-decision-button" onclick="submitDecision()">
-                            SUBMIT ORACLE DECISION
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Another Dispute -->
-                <div class="dispute-card">
-                    <div class="dispute-header">
-                        <div class="dispute-info">
-                            <div class="dispute-id">DISPUTE #D7824</div>
-                            <h3 class="dispute-title">Bitcoin Price Prediction</h3>
-                            <div class="dispute-meta">
-                                <span>Wager: ₦25,000</span>
-                                <span>Type 2</span>
-                                <span>Created: 45 minutes ago</span>
-                            </div>
-                        </div>
-                        <span class="dispute-urgency urgency-medium">MEDIUM</span>
-                    </div>
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Loading disputes...</p>
                 </div>
             </div>
         </main>
     </div>
 
+    <script src="/js/api.js"></script>
+    <script src="/js/adminApi.js"></script>
     <script>
         // Check admin authentication
         function checkAdminAuth() {
@@ -941,50 +788,385 @@
             document.getElementById('adminSidebar').classList.toggle('mobile-open');
         }
 
+        // State management
+        let currentTab = 'pending';
+        let disputes = [];
+        let selectedWinners = {};
+
+        // Initialize page
+        async function initializePage() {
+            try {
+                // Load categories first
+                await loadCategories();
+                
+                // Load dispute stats
+                await loadDisputeStats();
+                
+                // Load disputes
+                await loadDisputes();
+            } catch (error) {
+                console.error('Failed to initialize page:', error);
+                showToast('Failed to load page data', 'error');
+            }
+        }
+
+        // Load dispute stats
+        async function loadDisputeStats() {
+            try {
+                const stats = await adminApi.getDisputeStats();
+                
+                // Update stats
+                document.getElementById('pendingCount').textContent = stats.pending || '0';
+                document.getElementById('resolvedToday').textContent = stats.resolvedToday || '0';
+                document.getElementById('resolutionRate').textContent = `${stats.resolutionRate || 0}%`;
+                document.getElementById('avgResolutionTime').textContent = stats.avgResolutionTime || '0m';
+                
+                // Update tab counts
+                document.getElementById('pendingTabCount').textContent = stats.pending || '0';
+                document.getElementById('inReviewTabCount').textContent = stats.inReview || '0';
+                
+                // Add urgent class if there are pending disputes
+                if (stats.pending > 0) {
+                    document.getElementById('pendingCard').classList.add('urgent');
+                }
+            } catch (error) {
+                console.error('Failed to load dispute stats:', error);
+                // Set default values
+                document.getElementById('pendingCount').textContent = '0';
+                document.getElementById('resolvedToday').textContent = '0';
+                document.getElementById('resolutionRate').textContent = '0%';
+                document.getElementById('avgResolutionTime').textContent = '0m';
+            }
+        }
+
         // Switch tabs
-        function switchTab(tab) {
-            document.querySelectorAll('.dispute-tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+        async function switchTab(tab) {
+            currentTab = tab;
             
-            // In production, load disputes based on tab
-            console.log('Loading disputes:', tab);
+            // Update active tab
+            document.querySelectorAll('.dispute-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.tab === tab);
+            });
+            
+            // Load disputes for the selected tab
+            await loadDisputes();
+        }
+
+        // Load disputes
+        async function loadDisputes() {
+            const grid = document.getElementById('disputesGrid');
+            
+            // Show loading state
+            grid.innerHTML = `
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Loading disputes...</p>
+                </div>
+            `;
+            
+            try {
+                // Get disputes based on current tab
+                let params = {};
+                if (currentTab === 'pending') {
+                    params.status = 'in_dispute';
+                    params.reviewStatus = 'pending';
+                } else if (currentTab === 'in_review') {
+                    params.status = 'in_dispute';
+                    params.reviewStatus = 'in_review';
+                } else if (currentTab === 'resolved') {
+                    params.resolvedToday = true;
+                }
+                
+                const response = await adminApi.getDisputes(params);
+                disputes = response.disputes || [];
+                
+                if (disputes.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">⚖️</div>
+                            <h3 class="empty-title">No Disputes Found</h3>
+                            <p class="empty-message">
+                                ${currentTab === 'pending' ? 'No pending disputes to review' : 
+                                  currentTab === 'resolved' ? 'No disputes resolved today' : 
+                                  'No disputes in this category'}
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Display disputes
+                grid.innerHTML = disputes.map(dispute => renderDisputeCard(dispute)).join('');
+                
+            } catch (error) {
+                console.error('Failed to load disputes:', error);
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">❌</div>
+                        <h3 class="empty-title">Failed to Load Disputes</h3>
+                        <p class="empty-message">${error.message || 'Please try again later'}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render dispute card
+        function renderDisputeCard(dispute) {
+            const wager = dispute.wager;
+            const category = getCategoryById(wager.category_id);
+            const subcategory = wager.subcategory_id ? getSubcategoryById(wager.subcategory_id) : null;
+            const categoryDisplay = category ? 
+                `${category.icon} ${category.name}${subcategory ? ' - ' + subcategory.name : ''}` : 
+                'Unknown Category';
+            
+            // Calculate urgency based on time since creation
+            const hoursOld = (Date.now() - new Date(dispute.created_at).getTime()) / (1000 * 60 * 60);
+            const urgency = hoursOld > 24 ? 'high' : hoursOld > 12 ? 'medium' : 'low';
+            const urgencyClass = `urgency-${urgency}`;
+            
+            // Format time
+            const timeAgo = formatTimeAgo(dispute.created_at);
+            
+            return `
+                <div class="dispute-card ${urgency === 'high' ? 'urgent' : ''}">
+                    <div class="dispute-header">
+                        <div class="dispute-info">
+                            <div class="dispute-id">DISPUTE #${dispute.id.substring(0, 8).toUpperCase()}</div>
+                            <h3 class="dispute-title">${escapeHtml(wager.title)}</h3>
+                            <div class="dispute-meta">
+                                <span>Wager: ₦${parseFloat(wager.amount).toLocaleString()}</span>
+                                <span class="dispute-category">${categoryDisplay}</span>
+                                <span>Type ${wager.challenge_type === 'type1' ? '1' : '2'}</span>
+                                <span>Created: ${timeAgo}</span>
+                            </div>
+                        </div>
+                        <span class="dispute-urgency ${urgencyClass}">${urgency.toUpperCase()} PRIORITY</span>
+                    </div>
+
+                    <!-- Wager Details -->
+                    <div class="wager-details-grid">
+                        <!-- Creator -->
+                        <div class="participant-section">
+                            <div class="participant-header">
+                                <div class="participant-avatar">
+                                    ${wager.creator?.username?.substring(0, 2).toUpperCase() || 'CR'}
+                                </div>
+                                <div class="participant-info">
+                                    <div class="participant-name">${wager.creator?.username || 'Unknown'}</div>
+                                    <div class="participant-role">Creator</div>
+                                </div>
+                            </div>
+                            
+                            <div class="prediction-box">
+                                <div class="prediction-label">Prediction</div>
+                                <div class="prediction-text">
+                                    ${escapeHtml(wager.creator_prediction || 'No prediction provided')}
+                                </div>
+                            </div>
+
+                            <div class="outcome-submitted">
+                                <span class="outcome-label">Submitted:</span>
+                                <span class="outcome-value ${wager.creator_outcome === 'win' ? 'outcome-win' : 'outcome-lose'}">
+                                    ${wager.creator_outcome ? (wager.creator_outcome === 'win' ? 'I WIN' : 'I LOSE') : 'Not submitted'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Joiner -->
+                        <div class="participant-section">
+                            <div class="participant-header">
+                                <div class="participant-avatar">
+                                    ${wager.joiner?.username?.substring(0, 2).toUpperCase() || 'JN'}
+                                </div>
+                                <div class="participant-info">
+                                    <div class="participant-name">${wager.joiner?.username || 'Unknown'}</div>
+                                    <div class="participant-role">Challenger</div>
+                                </div>
+                            </div>
+                            
+                            <div class="prediction-box">
+                                <div class="prediction-label">${wager.challenge_type === 'type1' ? 'Position' : 'Prediction'}</div>
+                                <div class="prediction-text">
+                                    ${wager.challenge_type === 'type1' ? 
+                                        `Betting against creator's prediction` : 
+                                        escapeHtml(wager.joiner_prediction || 'No prediction provided')}
+                                </div>
+                            </div>
+
+                            <div class="outcome-submitted">
+                                <span class="outcome-label">Submitted:</span>
+                                <span class="outcome-value ${wager.joiner_outcome === 'win' ? 'outcome-win' : 'outcome-lose'}">
+                                    ${wager.joiner_outcome ? (wager.joiner_outcome === 'win' ? 'I WIN' : 'I LOSE') : 'Not submitted'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Evidence Section -->
+                    <div class="evidence-section">
+                        <h4 class="evidence-title">Evidence & Additional Information</h4>
+                        ${dispute.evidence && dispute.evidence.length > 0 ? 
+                            dispute.evidence.map(ev => `
+                                <div class="evidence-item">
+                                    <div class="evidence-icon">${ev.type === 'screenshot' ? '📸' : '📄'}</div>
+                                    <div class="evidence-details">
+                                        <div class="evidence-name">${escapeHtml(ev.title)}</div>
+                                        <div class="evidence-info">Submitted by ${ev.submittedBy}</div>
+                                    </div>
+                                </div>
+                            `).join('') : 
+                            '<div class="evidence-empty">No evidence submitted yet</div>'
+                        }
+                    </div>
+
+                    <!-- Oracle Decision Section -->
+                    ${currentTab !== 'resolved' ? `
+                        <div class="oracle-decision">
+                            <h3 class="oracle-decision-title">Oracle Decision</h3>
+                            
+                            <div class="decision-buttons">
+                                <div class="decision-button creator ${selectedWinners[dispute.id] === 'creator' ? 'selected' : ''}" 
+                                     onclick="selectWinner('${dispute.id}', 'creator')">
+                                    <div class="decision-button-label">Award to</div>
+                                    <div class="decision-button-text">${wager.creator?.username || 'Creator'}</div>
+                                </div>
+                                
+                                <div class="decision-button joiner ${selectedWinners[dispute.id] === 'joiner' ? 'selected' : ''}" 
+                                     onclick="selectWinner('${dispute.id}', 'joiner')">
+                                    <div class="decision-button-label">Award to</div>
+                                    <div class="decision-button-text">${wager.joiner?.username || 'Challenger'}</div>
+                                </div>
+                            </div>
+
+                            <div class="decision-notes">
+                                <div class="decision-notes-label">Decision Notes (Required)</div>
+                                <textarea class="decision-notes-input" 
+                                          placeholder="Explain your decision based on the evidence provided..."
+                                          id="decisionNotes-${dispute.id}"></textarea>
+                            </div>
+
+                            <button class="submit-decision-button" onclick="submitDecision('${dispute.id}')">
+                                SUBMIT ORACLE DECISION
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="oracle-decision">
+                            <h3 class="oracle-decision-title">Resolution Details</h3>
+                            <p style="color: var(--grey-light); margin-bottom: 10px;">
+                                Winner: <strong style="color: var(--white);">
+                                    ${dispute.winner_id === wager.creator_id ? wager.creator?.username : wager.joiner?.username}
+                                </strong>
+                            </p>
+                            <p style="color: var(--grey); font-size: 14px;">
+                                ${dispute.resolution_notes || 'No notes provided'}
+                            </p>
+                        </div>
+                    `}
+                </div>
+            `;
         }
 
         // Select winner
-        let selectedWinner = null;
-        function selectWinner(winner) {
-            selectedWinner = winner;
+        function selectWinner(disputeId, winner) {
+            selectedWinners[disputeId] = winner;
             
             // Update UI
-            document.querySelectorAll('.decision-button').forEach(btn => {
-                btn.style.border = '2px solid transparent';
-                btn.style.background = btn.classList.contains(winner) ? 
-                    (winner === 'creator' ? 'rgba(39,174,96,0.3)' : 'rgba(52,152,219,0.3)') : 
-                    (btn.classList.contains('creator') ? 'rgba(39,174,96,0.1)' : 'rgba(52,152,219,0.1)');
+            const disputeCard = document.querySelector(`[onclick="selectWinner('${disputeId}', 'creator')"]`).parentElement.parentElement;
+            disputeCard.querySelectorAll('.decision-button').forEach(btn => {
+                btn.classList.remove('selected');
             });
+            
+            if (winner === 'creator') {
+                disputeCard.querySelector('.decision-button.creator').classList.add('selected');
+            } else {
+                disputeCard.querySelector('.decision-button.joiner').classList.add('selected');
+            }
         }
 
         // Submit decision
-        function submitDecision() {
-            const notes = document.getElementById('decisionNotes').value;
+        async function submitDecision(disputeId) {
+            const notes = document.getElementById(`decisionNotes-${disputeId}`).value;
+            const winner = selectedWinners[disputeId];
             
-            if (!selectedWinner) {
-                alert('Please select a winner');
+            if (!winner) {
+                showToast('Please select a winner', 'error');
                 return;
             }
             
-            if (!notes || notes.length < 20) {
-                alert('Please provide detailed decision notes (minimum 20 characters)');
+            if (!notes || notes.trim().length < 20) {
+                showToast('Please provide detailed decision notes (minimum 20 characters)', 'error');
                 return;
             }
             
-            if (confirm(`Award this dispute to the ${selectedWinner}? This action cannot be undone.`)) {
-                // In production, submit to API
-                alert('Decision submitted successfully!');
+            if (!confirm(`Are you sure you want to award this dispute to the ${winner}? This action cannot be undone.`)) {
+                return;
+            }
+            
+            // Find the dispute
+            const dispute = disputes.find(d => d.id === disputeId);
+            if (!dispute) {
+                showToast('Dispute not found', 'error');
+                return;
+            }
+            
+            // Disable button to prevent double submission
+            const submitButton = event.target;
+            submitButton.disabled = true;
+            submitButton.textContent = 'SUBMITTING...';
+            
+            try {
+                // Determine winner ID
+                const winnerId = winner === 'creator' ? dispute.wager.creator_id : dispute.wager.joiner_id;
                 
-                // Reload disputes
-                location.reload();
+                // Submit decision
+                await adminApi.resolveDispute(disputeId, {
+                    winner_id: winnerId,
+                    resolution_notes: notes.trim(),
+                    resolved_by: adminUser.id || 'admin'
+                });
+                
+                showToast('Decision submitted successfully!', 'success');
+                
+                // Reload stats and disputes
+                await loadDisputeStats();
+                await loadDisputes();
+                
+            } catch (error) {
+                console.error('Failed to submit decision:', error);
+                showToast(error.message || 'Failed to submit decision', 'error');
+                
+                // Re-enable button
+                submitButton.disabled = false;
+                submitButton.textContent = 'SUBMIT ORACLE DECISION';
             }
+        }
+
+        // Format time ago
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 60) return `${diffMins} minutes ago`;
+            if (diffHours < 24) return `${diffHours} hours ago`;
+            if (diffDays < 7) return `${diffDays} days ago`;
+            return date.toLocaleDateString();
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
         }
 
         // Admin logout
@@ -995,6 +1177,17 @@
                 window.location.href = '/admin/login.html';
             }
         }
+
+        // Initialize page
+        initializePage();
+
+        // Auto-refresh every 30 seconds
+        setInterval(async () => {
+            await loadDisputeStats();
+            if (currentTab === 'pending' || currentTab === 'in_review') {
+                await loadDisputes();
+            }
+        }, 30000);
     </script>
 </body>
 </html>

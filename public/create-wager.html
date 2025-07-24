@@ -397,6 +397,23 @@
             line-height: 1.5;
         }
 
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
         @media (max-width: 768px) {
             .create-main {
                 padding: 0 15px;
@@ -614,25 +631,33 @@
 
     <script src="/js/api.js"></script>
     <script>
-        // Check authentication
-        if (!requireCompleteProfile()) {
-            // Redirect handled by requireCompleteProfile
-        }
-
+        // Global variables
         let selectedChallengeType = null;
         let selectedCategory = null;
         let categories = [];
 
-        // Load categories on page load
+        // Load categories from API
         async function loadCategories() {
             try {
+                console.log('🎯 Loading categories from API...');
+                
                 const response = await teteAPI.getCategories();
                 categories = response.categories;
                 
+                console.log('✅ Categories loaded:', categories.length);
+                
                 const grid = document.getElementById('categoryGrid');
+                if (!grid) {
+                    console.error('❌ Category grid element not found');
+                    return;
+                }
+                
                 grid.innerHTML = categories.map(cat => `
                     <div class="category-item" data-id="${cat.id}" data-slug="${cat.slug}">
-                        <div style="font-weight: 600; color: var(--white);">${cat.name}</div>
+                        <div style="font-size: 20px; margin-bottom: 8px;">${cat.icon}</div>
+                        <div style="font-weight: 600; color: var(--white); font-size: 14px; text-align: center;">
+                            ${cat.name}
+                        </div>
                     </div>
                 `).join('');
 
@@ -642,8 +667,64 @@
                         selectCategory(this);
                     });
                 });
+                
+                console.log('✅ Category grid populated successfully');
+                
             } catch (error) {
-                console.error('Failed to load categories:', error);
+                console.error('❌ Failed to load categories:', error);
+                showToast('Failed to load categories. Please refresh the page.', 'error');
+                
+                // Fallback: show error message in the grid
+                const grid = document.getElementById('categoryGrid');
+                if (grid) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--grey);">
+                            <p>Failed to load categories. Please refresh the page.</p>
+                            <button onclick="loadCategories()" class="btn-3d" style="margin-top: 10px;">
+                                Retry
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Handle category selection
+        function selectCategory(element) {
+            // Remove previous selection
+            document.querySelectorAll('.category-item').forEach(item => item.classList.remove('selected'));
+            
+            // Add selection to clicked item
+            element.classList.add('selected');
+            
+            const categoryId = element.dataset.id;
+            selectedCategory = categories.find(cat => cat.id === categoryId);
+            
+            if (!selectedCategory) {
+                console.error('❌ Selected category not found:', categoryId);
+                return;
+            }
+            
+            // Set the hidden input value
+            document.getElementById('categoryId').value = categoryId;
+            
+            console.log('✅ Selected category:', selectedCategory.name);
+            
+            // Load subcategories if available
+            const subcategoryGroup = document.getElementById('subcategoryGroup');
+            const subcategorySelect = document.getElementById('subcategory');
+            
+            if (selectedCategory.subcategories && selectedCategory.subcategories.length > 0) {
+                subcategorySelect.innerHTML = '<option value="">Select subcategory (optional)</option>' +
+                    selectedCategory.subcategories.map(sub => 
+                        `<option value="${sub.id}">${sub.name}</option>`
+                    ).join('');
+                
+                subcategoryGroup.style.display = 'block';
+                console.log('✅ Loaded', selectedCategory.subcategories.length, 'subcategories');
+            } else {
+                subcategoryGroup.style.display = 'none';
+                console.log('ℹ️ No subcategories for', selectedCategory.name);
             }
         }
 
@@ -687,31 +768,6 @@
             });
         });
 
-        // Handle category selection
-        function selectCategory(element) {
-            document.querySelectorAll('.category-item').forEach(item => item.classList.remove('selected'));
-            element.classList.add('selected');
-            
-            const categoryId = element.dataset.id;
-            selectedCategory = categories.find(cat => cat.id === categoryId);
-            document.getElementById('categoryId').value = categoryId;
-            
-            // Load subcategories if available
-            if (selectedCategory && selectedCategory.wager_subcategories && selectedCategory.wager_subcategories.length > 0) {
-                const subcategoryGroup = document.getElementById('subcategoryGroup');
-                const subcategorySelect = document.getElementById('subcategory');
-                
-                subcategorySelect.innerHTML = '<option value="">Select subcategory</option>' +
-                    selectedCategory.wager_subcategories.map(sub => 
-                        `<option value="${sub.id}">${sub.name}</option>`
-                    ).join('');
-                
-                subcategoryGroup.style.display = 'block';
-            } else {
-                document.getElementById('subcategoryGroup').style.display = 'none';
-            }
-        }
-
         // Character counters
         document.getElementById('prediction').addEventListener('input', function() {
             document.getElementById('predictionCount').textContent = this.value.length;
@@ -721,7 +777,7 @@
             document.getElementById('termsCount').textContent = this.value.length;
         });
 
-        // Set minimum datetime to 30 minutes from now
+        // Set minimum datetime
         function setMinDateTime() {
             const now = new Date();
             now.setMinutes(now.getMinutes() + 30);
@@ -752,6 +808,14 @@
             const category = selectedCategory ? selectedCategory.name : 'Not selected';
             const challengeType = selectedChallengeType === 'type1' ? 'Type 1: Simple' : 'Type 2: Complex';
 
+            // Get subcategory name if selected
+            const subcategorySelect = document.getElementById('subcategory');
+            let subcategoryName = '';
+            if (subcategorySelect.value) {
+                const selectedSub = selectedCategory?.subcategories?.find(sub => sub.id === subcategorySelect.value);
+                subcategoryName = selectedSub ? ` - ${selectedSub.name}` : '';
+            }
+
             const previewBody = document.getElementById('previewBody');
             previewBody.innerHTML = `
                 <div class="preview-item">
@@ -768,7 +832,7 @@
                 
                 <div class="preview-item">
                     <div class="preview-label">Category</div>
-                    <div class="preview-value">${category}</div>
+                    <div class="preview-value">${category}${subcategoryName}</div>
                 </div>
                 
                 <div class="preview-item">
@@ -842,26 +906,43 @@
                     // Show success message
                     const tierMessage = response.tierMessage || '';
                     if (tierMessage) {
-                        showToast(tierMessage, 'info');
+                        setTimeout(() => {
+                            showToast(tierMessage, 'info');
+                        }, 1000);
                     }
                     
                     // Redirect to wager details or dashboard
                     setTimeout(() => {
                         window.location.href = `/wager-details.html?id=${response.wager.id}`;
-                    }, 1500);
+                    }, 2000);
                 }
             } catch (error) {
                 document.getElementById('loadingOverlay').classList.remove('show');
                 showToast(error.message || 'Failed to create wager', 'error');
+                console.error('Create wager error:', error);
             }
         });
 
-        // Initialize
-        loadCategories();
-        setMinDateTime();
-
-        // Refresh datetime constraint every minute
-        setInterval(setMinDateTime, 60000);
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initializing create wager page...');
+            
+            // Check authentication
+            if (!requireCompleteProfile()) {
+                return;
+            }
+            
+            // Load categories
+            loadCategories();
+            
+            // Set datetime constraints
+            setMinDateTime();
+            
+            // Refresh datetime constraint every minute
+            setInterval(setMinDateTime, 60000);
+            
+            console.log('✅ Create wager page initialized');
+        });
     </script>
 </body>
 </html>

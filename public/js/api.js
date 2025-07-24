@@ -320,3 +320,195 @@ function requireCompleteProfile() {
     }
     return true;
 }
+// ============================================
+// WAGER CATEGORIES - Complete Configuration
+// ============================================
+window.WAGER_CATEGORIES = {
+    football: {
+        name: 'Football',
+        icon: '⚽',
+        subcategories: {
+            nigerian_football: 'Nigerian Football',
+            european_football: 'European Football',
+            african_football: 'African Football',
+            others: 'Others'
+        }
+    },
+    politics: {
+        name: 'Politics',
+        icon: '🏛️',
+        subcategories: {
+            nigerian_politics: 'Nigerian Politics',
+            international_politics: 'International Politics',
+            us_politics: 'US Politics',
+            others: 'Others'
+        }
+    },
+    basketball: {
+        name: 'Basketball',
+        icon: '🏀',
+        subcategories: {
+            nba: 'NBA',
+            african_basketball: 'African Basketball',
+            european_basketball: 'European Basketball',
+            others: 'Others'
+        }
+    },
+    entertainment: {
+        name: 'Entertainment',
+        icon: '🎬',
+        subcategories: {
+            nollywood: 'Nollywood',
+            hollywood: 'Hollywood',
+            music_awards: 'Music Awards',
+            others: 'Others'
+        }
+    },
+    esports: {
+        name: 'Esports',
+        icon: '🎮',
+        subcategories: {
+            fifa: 'FIFA',
+            call_of_duty: 'Call of Duty',
+            league_of_legends: 'League of Legends',
+            others: 'Others'
+        }
+    },
+    combat_sports: {
+        name: 'Combat Sports',
+        icon: '🥊',
+        subcategories: {
+            boxing: 'Boxing',
+            ufc: 'UFC',
+            wrestling: 'Wrestling',
+            others: 'Others'
+        }
+    },
+    reality_tv: {
+        name: 'Reality TV',
+        icon: '📺',
+        subcategories: {
+            big_brother: 'Big Brother',
+            talent_shows: 'Talent Shows',
+            awards_shows: 'Awards Shows',
+            others: 'Others'
+        }
+    },
+    current_events: {
+        name: 'Current Events',
+        icon: '📰',
+        subcategories: {
+            global_news: 'Global News',
+            local_news: 'Local News',
+            trending_topics: 'Trending Topics',
+            others: 'Others'
+        }
+    },
+    tech: {
+        name: 'Tech',
+        icon: '💻',
+        subcategories: {
+            product_launches: 'Product Launches',
+            startup_competitions: 'Startup Competitions',
+            tech_trends: 'Tech Trends',
+            others: 'Others'
+        }
+    },
+    custom: {
+        name: 'Custom',
+        icon: '🎯',
+        subcategories: {
+            unique_bets: 'Unique Bets',
+            personal_challenges: 'Personal Challenges',
+            miscellaneous: 'Miscellaneous',
+            others: 'Others'
+        }
+    }
+};
+
+// Helper functions
+window.getCategoryName = function(categoryId) {
+    return window.WAGER_CATEGORIES[categoryId]?.name || 'Custom';
+};
+
+window.getCategoryIcon = function(categoryId) {
+    return window.WAGER_CATEGORIES[categoryId]?.icon || '🎯';
+};
+
+window.getSubcategoryName = function(categoryId, subcategoryId) {
+    return window.WAGER_CATEGORIES[categoryId]?.subcategories[subcategoryId] || 'Others';
+};
+
+window.getAllCategories = function() {
+    return Object.entries(window.WAGER_CATEGORIES).map(([id, data]) => ({
+        id: id,
+        name: data.name,
+        icon: data.icon
+    }));
+};
+
+window.getSubcategories = function(categoryId) {
+    const category = window.WAGER_CATEGORIES[categoryId];
+    if (!category) return [];
+    
+    return Object.entries(category.subcategories).map(([id, name]) => ({
+        id: id,
+        name: name
+    }));
+};
+
+// Get full category display (e.g., "Football - Nigerian Football")
+window.getFullCategoryName = function(categoryId, subcategoryId) {
+    const categoryName = getCategoryName(categoryId);
+    const subcategoryName = getSubcategoryName(categoryId, subcategoryId);
+    return subcategoryId && subcategoryId !== 'others' 
+        ? `${categoryName} - ${subcategoryName}`
+        : categoryName;
+};
+
+// Load categories from database
+window.loadCategories = async function() {
+    try {
+        const response = await fetch('/api/general/categories');
+        const data = await response.json();
+        
+        // Store in a global variable
+        window.DB_CATEGORIES = data.categories;
+        
+        // Create lookup objects for easy access
+        window.CATEGORY_LOOKUP = {};
+        window.SUBCATEGORY_LOOKUP = {};
+        
+        data.categories.forEach(cat => {
+            window.CATEGORY_LOOKUP[cat.id] = cat;
+            cat.subcategories.forEach(sub => {
+                window.SUBCATEGORY_LOOKUP[sub.id] = sub;
+            });
+        });
+        
+        return data.categories;
+    } catch (error) {
+        console.error('Failed to load categories:', error);
+        return [];
+    }
+};
+
+// Helper to get category by ID
+window.getCategoryById = function(categoryId) {
+    return window.CATEGORY_LOOKUP?.[categoryId] || null;
+};
+
+// Helper to get subcategory by ID
+window.getSubcategoryById = function(subcategoryId) {
+    return window.SUBCATEGORY_LOOKUP?.[subcategoryId] || null;
+};
+
+// Get category name by ID
+window.getCategoryName = function(categoryId) {
+    return window.CATEGORY_LOOKUP?.[categoryId]?.name || 'Unknown';
+};
+
+// Get subcategory name by ID  
+window.getSubcategoryName = function(subcategoryId) {
+    return window.SUBCATEGORY_LOOKUP?.[subcategoryId]?.name || 'Unknown';
+};

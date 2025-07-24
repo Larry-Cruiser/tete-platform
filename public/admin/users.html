@@ -657,75 +657,9 @@
                         </thead>
                         <tbody id="usersTableBody">
                             <tr>
-                                <td>
-                                    <div class="user-info">
-                                        <div class="user-avatar">JD</div>
-                                        <div class="user-details">
-                                            <div class="user-username">JohnDoe23</div>
-                                            <div class="user-email">john.doe@email.com</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="status-badge status-active">Active</span>
-                                    <span class="status-badge status-verified">Verified</span>
-                                </td>
-                                <td>Jan 15, 2025</td>
-                                <td class="balance-cell">₦25,500</td>
-                                <td>47</td>
-                                <td>2 hours ago</td>
-                                <td>
-                                    <div class="actions-cell">
-                                        <button class="action-button" onclick="viewUserDetails('user1')">View</button>
-                                        <button class="action-button danger" onclick="suspendUser('user1')">Suspend</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="user-info">
-                                        <div class="user-avatar">CB</div>
-                                        <div class="user-details">
-                                            <div class="user-username">ChampBet</div>
-                                            <div class="user-email">champbet@email.com</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="status-badge status-active">Active</span>
-                                </td>
-                                <td>Jan 18, 2025</td>
-                                <td class="balance-cell">₦120,000</td>
-                                <td>234</td>
-                                <td>5 minutes ago</td>
-                                <td>
-                                    <div class="actions-cell">
-                                        <button class="action-button" onclick="viewUserDetails('user2')">View</button>
-                                        <button class="action-button danger" onclick="suspendUser('user2')">Suspend</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="user-info">
-                                        <div class="user-avatar">BK</div>
-                                        <div class="user-details">
-                                            <div class="user-username">BetKing</div>
-                                            <div class="user-email">betking@email.com</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="status-badge status-suspended">Suspended</span>
-                                </td>
-                                <td>Dec 20, 2024</td>
-                                <td class="balance-cell">₦0</td>
-                                <td>89</td>
-                                <td>3 days ago</td>
-                                <td>
-                                    <div class="actions-cell">
-                                        <button class="action-button" onclick="viewUserDetails('user3')">View</button>
-                                        <button class="action-button" onclick="unsuspendUser('user3')">Unsuspend</button>
+                                <td colspan="7" style="text-align: center; padding: 40px;">
+                                    <div style="color: var(--grey);">
+                                        Loading users...
                                     </div>
                                 </td>
                             </tr>
@@ -791,7 +725,7 @@
                     </div>
                 </div>
 
-                <h3 style="color: var(--white); margin-bottom: 20px;">Wager Statistics</h3>
+          \<h3 style="color: var(--white); margin-bottom: 20px;">Wager Statistics</h3>
                 <div class="wager-stats">
                     <div class="wager-stat-card">
                         <div class="wager-stat-value">47</div>
@@ -820,6 +754,7 @@
         </div>
     </div>
 
+    <script src="/js/adminApi.js"></script>
     <script>
         // Check admin authentication
         function checkAdminAuth() {
@@ -846,9 +781,87 @@
         }
 
         // View user details
-        function viewUserDetails(userId) {
-            document.getElementById('userDetailsModal').classList.add('show');
-            // In production, load actual user data
+        async function viewUserDetails(userId) {
+            try {
+                console.log('Viewing user with ID:', userId);
+                
+                // Show modal immediately with loading state
+                document.getElementById('userDetailsModal').classList.add('show');
+                
+                // Set loading state
+                document.getElementById('modalUsername').textContent = 'Loading...';
+                document.getElementById('modalEmail').textContent = 'Loading...';
+                document.getElementById('modalFullName').textContent = 'Loading...';
+                document.getElementById('modalPhone').textContent = 'Loading...';
+                document.getElementById('modalBank').textContent = 'Loading...';
+                document.getElementById('modalBalance').textContent = 'Loading...';
+                document.getElementById('modalRegDate').textContent = 'Loading...';
+                document.getElementById('modalLastLogin').textContent = 'Loading...';
+                
+                // Find the user from our loaded data
+                const userData = await adminApi.getUsers({ page: 1 });
+                console.log('All users:', userData.users);
+                console.log('Looking for user ID:', userId);
+                
+                const user = userData.users.find(u => u.id === userId);
+                console.log('Found user:', user);
+                
+                if (user) {
+                    // Update modal with real user data
+                    document.getElementById('modalUsername').textContent = user.username || 'Not set';
+                    document.getElementById('modalEmail').textContent = user.email;
+                    document.getElementById('modalFullName').textContent = user.full_name || 'Not provided';
+                    document.getElementById('modalPhone').textContent = user.phone || 'Not provided';
+                    document.getElementById('modalBank').textContent = user.bank_name && user.bank_account_number 
+                        ? `${user.bank_name} - ${user.bank_account_number}` 
+                        : 'Not set';
+                    document.getElementById('modalBalance').textContent = `₦${(user.wallets?.balance || 0).toLocaleString()}`;
+                    document.getElementById('modalRegDate').textContent = new Date(user.created_at).toLocaleDateString();
+                    document.getElementById('modalLastLogin').textContent = user.last_login 
+                        ? new Date(user.last_login).toLocaleDateString() 
+                        : 'Never';
+                    
+                    // Fix the suspend/unsuspend button in modal
+                    const actionButtons = document.querySelector('.modal-body > div[style*="margin-top: 30px"]');
+                    if (actionButtons) {
+                        const suspendBtn = actionButtons.querySelector('.btn-3d[style*="primary"]');
+                        if (suspendBtn) {
+                            if (user.status === 'suspended') {
+                                suspendBtn.textContent = 'Unsuspend User';
+                                suspendBtn.style.background = 'var(--green)';
+                                suspendBtn.onclick = () => {
+                                    unsuspendUser(userId);
+                                    closeModal();
+                                };
+                            } else {
+                                suspendBtn.textContent = 'Suspend User';
+                                suspendBtn.style.background = 'var(--primary)';
+                                suspendBtn.onclick = () => {
+                                    suspendUser(userId);
+                                    closeModal();
+                                };
+                            }
+                        }
+                    }
+
+                    // Update wager statistics with zeros for now (until we add real stats)
+                    const statCards = document.querySelectorAll('.wager-stat-card');
+                    if (statCards.length >= 4) {
+                        statCards[0].querySelector('.wager-stat-value').textContent = '0';
+                        statCards[1].querySelector('.wager-stat-value').textContent = '0';
+                        statCards[2].querySelector('.wager-stat-value').textContent = '₦0';
+                        statCards[3].querySelector('.wager-stat-value').textContent = '0%';
+                    }
+                } else {
+                    console.error('User not found with ID:', userId);
+                    alert('User not found');
+                    closeModal();
+                }
+            } catch (error) {
+                console.error('Failed to load user details:', error);
+                alert('Failed to load user details');
+                closeModal();
+            }
         }
 
         // Close modal
@@ -857,19 +870,60 @@
         }
 
         // Suspend user
-        function suspendUser(userId) {
+        async function suspendUser(userId) {
             if (confirm('Are you sure you want to suspend this user?')) {
-                alert('User suspended successfully!');
-                // In production, call API to suspend user
+                try {
+                    const response = await fetch(`/api/admin/users/${userId}/suspend`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${getAdminToken()}`
+                        },
+                        body: JSON.stringify({ action: 'suspend', reason: 'Admin action' })
+                    });
+                    
+                    if (response.ok) {
+                        alert('User suspended successfully!');
+                        loadUsers(); // Reload the table
+                    } else {
+                        alert('Failed to suspend user');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to suspend user');
+                }
             }
         }
 
         // Unsuspend user
-        function unsuspendUser(userId) {
+        async function unsuspendUser(userId) {
             if (confirm('Are you sure you want to unsuspend this user?')) {
-                alert('User unsuspended successfully!');
-                // In production, call API to unsuspend user
+                try {
+                    const response = await fetch(`/api/admin/users/${userId}/suspend`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${getAdminToken()}`
+                        },
+                        body: JSON.stringify({ action: 'unsuspend' })
+                    });
+                    
+                    if (response.ok) {
+                        alert('User unsuspended successfully!');
+                        loadUsers(); // Reload the table
+                    } else {
+                        alert('Failed to unsuspend user');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to unsuspend user');
+                }
             }
+        }
+
+        // Helper function to get admin token
+        function getAdminToken() {
+            return localStorage.getItem('tete_admin_token');
         }
 
         // Admin logout
@@ -894,6 +948,60 @@
                 closeModal();
             }
         });
+
+        // Load users data
+        async function loadUsers() {
+            try {
+                const data = await adminApi.getUsers({ page: 1 });
+                const tbody = document.getElementById('usersTableBody');
+                
+                // Update stats
+                document.querySelector('.table-stat:nth-child(1) strong').textContent = data.total || 0;
+                document.querySelector('.table-stat:nth-child(2) strong').textContent = data.users?.filter(u => u.status === 'active').length || 0;
+                document.querySelector('.table-stat:nth-child(3) strong').textContent = data.users?.filter(u => u.status === 'suspended').length || 0;
+                
+                if (!data.users || data.users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">No users found</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.users.map(user => {
+                    const balance = user.wallets?.balance || 0;
+                    return `
+                        <tr>
+                            <td>
+                                <div class="user-info">
+                                    <div class="user-avatar">${user.username ? user.username.substring(0, 2).toUpperCase() : 'NA'}</div>
+                                    <div class="user-details">
+                                        <div class="user-username">${user.username || 'No username'}</div>
+                                        <div class="user-email">${user.email}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="status-badge status-${user.status || 'active'}">${user.status || 'active'}</span></td>
+                            <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                            <td class="balance-cell">₦${parseFloat(balance).toLocaleString()}</td>
+                            <td>${user.totalWagers || 0}</td>
+                            <td>${user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}</td>
+                            <td>
+                                <div class="actions-cell">
+                                    <button class="action-button" onclick="viewUserDetails('${user.id}')">View</button>
+                                    ${user.status === 'suspended' 
+                                        ? `<button class="action-button" onclick="unsuspendUser('${user.id}')">Unsuspend</button>`
+                                        : `<button class="action-button danger" onclick="suspendUser('${user.id}')">Suspend</button>`
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Failed to load users:', error);
+            }
+        }
+
+        // Load users when page loads
+        loadUsers();
     </script>
 </body>
-</html>
+</html>    

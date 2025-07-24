@@ -3,26 +3,52 @@ const router = express.Router();
 const { supabaseAdmin } = require('../config/supabase');
 const paystackService = require('../services/paystackService');
 
-// Get categories
+// Get categories with subcategories
 router.get('/categories', async (req, res) => {
     try {
-        const { data: categories, error } = await supabaseAdmin
+        console.log('🎯 Fetching categories from database...');
+        
+        // Get all categories - FIXED: Remove the .eq('active', true) filter for now
+        const { data: categories, error: catError } = await supabaseAdmin
             .from('wager_categories')
-            .select(`
-                *,
-                wager_subcategories(*)
-            `)
-            .eq('is_active', true)
-            .order('display_order');
+            .select('*')
+            .order('name');
 
-        if (error) {
-            return res.status(500).json({ error: 'Failed to fetch categories' });
+        if (catError) {
+            console.error('Categories error:', catError);
+            throw catError;
         }
 
-        res.json({ categories });
+        console.log('✅ Categories fetched:', categories?.length || 0);
+
+        // Get all subcategories - FIXED: Remove the .eq('active', true) filter for now
+        const { data: subcategories, error: subError } = await supabaseAdmin
+            .from('wager_subcategories')
+            .select('*')
+            .order('name');
+
+        if (subError) {
+            console.error('Subcategories error:', subError);
+            throw subError;
+        }
+
+        console.log('✅ Subcategories fetched:', subcategories?.length || 0);
+
+        // Group subcategories by category
+        const categoriesWithSubs = categories.map(cat => ({
+            ...cat,
+            subcategories: subcategories.filter(sub => sub.category_id === cat.id)
+        }));
+
+        console.log('✅ Sending response with', categoriesWithSubs.length, 'categories');
+
+        res.json({ categories: categoriesWithSubs });
     } catch (error) {
-        console.error('Get categories error:', error);
-        res.status(500).json({ error: 'Server error' });
+        console.error('❌ Get categories error:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch categories',
+            details: error.message 
+        });
     }
 });
 
@@ -48,11 +74,11 @@ router.get('/banks', async (req, res) => {
 // Get platform stats
 router.get('/stats', async (req, res) => {
     try {
-        const { data: totalUsers } = await supabaseAdmin
+        const { count: totalUsers } = await supabaseAdmin
             .from('users')
             .select('id', { count: 'exact', head: true });
 
-        const { data: activeWagers } = await supabaseAdmin
+        const { count: activeWagers } = await supabaseAdmin
             .from('wagers')
             .select('id', { count: 'exact', head: true })
             .in('status', ['open', 'in_progress']);

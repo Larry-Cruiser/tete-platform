@@ -283,7 +283,7 @@
         }
 
         /* Recent Activity */
-        .activity-section {
+        .activity-section{
             background: linear-gradient(145deg, rgba(26,26,26,0.95), rgba(15,15,15,0.95));
             border: 1px solid rgba(231,76,60,0.2);
             border-radius: 20px;
@@ -551,49 +551,17 @@
             <div class="activity-section">
                 <div class="activity-header">
                     <h3 class="activity-title">Recent Platform Activity</h3>
-                    <a href="/admin/activity.html" style="color: var(--primary); text-decoration: none;">
-                        View All →
-                    </a>
+                    <span style="color: var(--grey); font-size: 14px;">
+                        Real-time feed
+                    </span>
                 </div>
 
-                <div class="activity-list">
+                <div class="activity-list" id="activityList">
                     <div class="activity-item">
-                        <div class="activity-icon user">👤</div>
+                        <div class="activity-icon user">📊</div>
                         <div class="activity-details">
-                            <div class="activity-text">New user registered: <strong>ChampBet23</strong></div>
-                            <div class="activity-time">2 minutes ago</div>
-                        </div>
-                    </div>
-
-                    <div class="activity-item">
-                        <div class="activity-icon wager">🎯</div>
-                        <div class="activity-details">
-                            <div class="activity-text">High-value wager created: <span class="activity-amount">₦50,000</span></div>
-                            <div class="activity-time">5 minutes ago</div>
-                        </div>
-                    </div>
-
-                    <div class="activity-item">
-                        <div class="activity-icon money">💸</div>
-                        <div class="activity-details">
-                            <div class="activity-text">Withdrawal processed: <span class="activity-amount">₦125,000</span></div>
-                            <div class="activity-time">12 minutes ago</div>
-                        </div>
-                    </div>
-
-                    <div class="activity-item">
-                        <div class="activity-icon wager">⚡</div>
-                        <div class="activity-details">
-                            <div class="activity-text">Dispute resolved: Wager #W2847</div>
-                            <div class="activity-time">18 minutes ago</div>
-                        </div>
-                    </div>
-
-                    <div class="activity-item">
-                        <div class="activity-icon user">🔒</div>
-                        <div class="activity-details">
-                            <div class="activity-text">User account suspended: Violation of terms</div>
-                            <div class="activity-time">25 minutes ago</div>
+                            <div class="activity-text">Platform launched</div>
+                            <div class="activity-time">Welcome to Tété Admin</div>
                         </div>
                     </div>
                 </div>
@@ -601,6 +569,7 @@
         </main>
     </div>
 
+    <script src="/js/adminApi.js"></script>
     <script>
         // Check admin authentication
         function checkAdminAuth() {
@@ -645,19 +614,46 @@
         }
 
         // Update stats with animation
-        function updateStats() {
-            // Simulate real-time updates
-            const stats = {
-                totalUsers: Math.floor(2847 + Math.random() * 50),
-                activeWagers: Math.floor(342 + Math.random() * 20),
-                totalRevenue: (5.2 + Math.random() * 0.3).toFixed(1),
-                pendingDisputes: Math.floor(7 + Math.random() * 3)
-            };
+        async function updateStats() {
+            try {
+                // Get REAL data from your database
+                const stats = await adminApi.getDashboardStats();
+                
+                animateNumber('totalUsers', stats.totalUsers);
+                animateNumber('activeWagers', stats.activeWagers);
+                document.getElementById('totalRevenue').textContent = `₦${stats.totalRevenue}`;
+                animateNumber('pendingDisputes', stats.pendingDisputes);
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
 
-            animateNumber('totalUsers', stats.totalUsers);
-            animateNumber('activeWagers', stats.activeWagers);
-            document.getElementById('totalRevenue').textContent = `₦${stats.totalRevenue}M`;
-            animateNumber('pendingDisputes', stats.pendingDisputes);
+        // Function to update activity list
+        function updateActivityList(activities) {
+            const activityList = document.getElementById('activityList');
+            if (!activities || activities.length === 0) return;
+            
+            activityList.innerHTML = activities.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-icon user">📊</div>
+                    <div class="activity-details">
+                        <div class="activity-text">${activity.action}</div>
+                        <div class="activity-time">${getRelativeTime(activity.created_at)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Helper function for relative time
+        function getRelativeTime(timestamp) {
+            const now = new Date();
+            const then = new Date(timestamp);
+            const diff = Math.floor((now - then) / 1000); // seconds
+            
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+            return `${Math.floor(diff / 86400)} days ago`;
         }
 
         // Animate number changes
@@ -694,6 +690,9 @@
             updateStats();
             document.getElementById('lastUpdate').textContent = 'Last update: Just now';
         }, 30000);
+
+        // Load stats when page loads
+        updateStats();
 
         // Set active nav item
         document.querySelectorAll('.admin-nav-item').forEach(item => {

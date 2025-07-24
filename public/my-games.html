@@ -351,53 +351,6 @@
             border-color: var(--primary);
         }
 
-        .outcome-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .outcome-section {
-            background: rgba(255,255,255,0.02);
-            border-radius: 15px;
-            padding: 20px;
-        }
-
-        .outcome-section-title {
-            color: var(--white);
-            font-weight: 600;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .outcome-option {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .outcome-option:hover {
-            background: rgba(255,255,255,0.05);
-        }
-
-        .outcome-option input[type="radio"] {
-            width: 20px;
-            height: 20px;
-            accent-color: var(--primary);
-        }
-
-        .outcome-option label {
-            color: var(--grey-light);
-            cursor: pointer;
-            flex: 1;
-        }
-
         @media (max-width: 768px) {
             .games-main {
                 padding: 0 15px;
@@ -414,10 +367,6 @@
 
             .vs-divider {
                 margin: 0;
-            }
-
-            .outcome-grid {
-                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -507,6 +456,20 @@
             earnings: 0
         };
 
+        // Initialize page - load categories first, then wagers
+        async function initializePage() {
+            try {
+                // Load categories from database
+                await loadCategories();
+                
+                // Then load user's wagers
+                await loadMyWagers();
+            } catch (error) {
+                console.error('Failed to initialize page:', error);
+                showToast('Failed to load page data', 'error');
+            }
+        }
+
         // Tab switching
         document.querySelectorAll('.glass-tab').forEach(tab => {
             tab.addEventListener('click', function() {
@@ -570,6 +533,13 @@
                 const statusClass = getStatusClass(wager.status);
                 const canSubmitOutcome = canSubmitOutcome(wager);
                 
+                // Get category names from loaded data (no API calls!)
+                const category = getCategoryById(wager.category_id);
+                const subcategory = wager.subcategory_id ? getSubcategoryById(wager.subcategory_id) : null;
+                const categoryDisplay = category ? 
+                    `${category.icon || '📁'} ${category.name}${subcategory ? ' - ' + subcategory.name : ''}` : 
+                    '📁 Unknown Category';
+                
                 return `
                     <div class="wager-card" onclick="viewWagerDetails('${wager.id}')">
                         <div class="wager-header">
@@ -583,11 +553,11 @@
                                         💰 ${formatCurrency(wager.amount)}
                                     </span>
                                     <span class="wager-meta-item">
-                                        📁 ${wager.category.name}
+                                        ${categoryDisplay}
                                     </span>
                                 </div>
                             </div>
-                            <span class="wager-status ${statusClass}">${wager.status}</span>
+                            <span class="wager-status ${statusClass}">${formatStatus(wager.status)}</span>
                         </div>
 
                         ${wager.status === 'in_progress' ? `
@@ -605,14 +575,14 @@
                             <div class="participant">
                                 <div class="participant-label">Creator</div>
                                 <div class="participant-name">
-                                    ${isCreator ? 'You' : wager.creator.username}
+                                    ${isCreator ? 'You' : (wager.creator?.username || 'Unknown')}
                                 </div>
                             </div>
                             <div class="vs-divider">VS</div>
                             <div class="participant">
                                 <div class="participant-label">Challenger</div>
                                 <div class="participant-name">
-                                    ${opponent ? (isCreator ? opponent.username : 'You') : 'Waiting...'}
+                                    ${opponent ? (isCreator ? (opponent.username || 'Unknown') : 'You') : 'Waiting...'}
                                 </div>
                             </div>
                         </div>
@@ -628,6 +598,20 @@
                     initializeWagerCountdown(wager);
                 }
             });
+        }
+
+        // Format status for display
+        function formatStatus(status) {
+            const statusMap = {
+                'open': 'Open',
+                'pending_approval': 'Pending Approval',
+                'in_progress': 'In Progress',
+                'pending_outcome': 'Awaiting Outcome',
+                'in_dispute': 'In Dispute',
+                'completed': 'Completed',
+                'cancelled': 'Cancelled'
+            };
+            return statusMap[status] || status;
         }
 
         // Get status class
@@ -776,8 +760,8 @@
             window.location.href = `/wager-details.html?id=${wagerId}`;
         }
 
-        // Initialize
-        loadMyWagers();
+        // Initialize page on load
+        initializePage();
 
         // Refresh every 30 seconds for live updates
         setInterval(() => {
