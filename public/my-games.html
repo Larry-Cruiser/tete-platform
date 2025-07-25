@@ -445,6 +445,7 @@
             // Redirect handled by requireCompleteProfile
         }
 
+        // Global variables
         let currentStatus = 'active';
         let currentPage = 1;
         let myWagers = [];
@@ -456,7 +457,7 @@
             earnings: 0
         };
 
-        // Format status for display
+        // Utility functions
         function formatStatus(status) {
             const statusMap = {
                 'open': 'Open',
@@ -470,7 +471,6 @@
             return statusMap[status] || status;
         }
 
-        // Get status class
         function getStatusClass(status) {
             const statusMap = {
                 'open': 'status-pending',
@@ -484,7 +484,6 @@
             return statusMap[status] || 'status-pending';
         }
 
-        // Check if user can submit outcome - MOVED BEFORE displayWagers
         function canSubmitOutcome(wager) {
             if (wager.status !== 'in_progress' && wager.status !== 'pending_outcome') return false;
             
@@ -492,10 +491,8 @@
             const decisionTime = new Date(wager.decision_datetime);
             const deadlineTime = new Date(decisionTime.getTime() + 24 * 60 * 60 * 1000);
             
-            // Check if decision time has passed but deadline hasn't
             if (now < decisionTime || now > deadlineTime) return false;
             
-            // Check if user already submitted
             const isCreator = wager.creator_id === teteAPI.user.id;
             if (isCreator && wager.creator_outcome) return false;
             if (!isCreator && wager.joiner_outcome) return false;
@@ -503,7 +500,6 @@
             return true;
         }
 
-        // Render wager actions based on status
         function renderWagerActions(wager, isCreator, canSubmitOutcome) {
             if (wager.status === 'pending_approval' && isCreator) {
                 return `
@@ -557,7 +553,6 @@
             `;
         }
 
-        // Initialize countdown for a wager
         function initializeWagerCountdown(wager) {
             const element = document.getElementById(`countdown-${wager.id}`);
             if (!element) return;
@@ -573,18 +568,48 @@
             }
 
             const interval = initializeCountdown(element, targetTime);
-            
-            // Store interval for cleanup
             element.dataset.interval = interval;
         }
 
-        // Initialize page - load categories first, then wagers
+        // Initialize page
         async function initializePage() {
             try {
-                // Load categories from database
-                await loadCategories();
+                // Load categories directly (same approach as wagers.html)
+                try {
+                    const response = await fetch('/api/general/categories');
+                    const data = await response.json();
+                    
+                    // Store in global variables
+                    window.DB_CATEGORIES = data.categories;
+                    window.CATEGORY_LOOKUP = {};
+                    window.SUBCATEGORY_LOOKUP = {};
+                    
+                    data.categories.forEach(cat => {
+                        window.CATEGORY_LOOKUP[cat.id] = cat;
+                        cat.subcategories.forEach(sub => {
+                            window.SUBCATEGORY_LOOKUP[sub.id] = sub;
+                        });
+                    });
+
+                    // Define the helper functions
+                    window.getCategoryById = function(categoryId) {
+                        return window.CATEGORY_LOOKUP[categoryId] || null;
+                    };
+
+                    window.getSubcategoryById = function(subcategoryId) {
+                        return window.SUBCATEGORY_LOOKUP[subcategoryId] || null;
+                    };
+
+                    window.getCategoryName = function(categoryId) {
+                        return window.CATEGORY_LOOKUP[categoryId]?.name || 'Unknown';
+                    };
+                    
+                    console.log('Categories loaded:', data.categories.length);
+                } catch (error) {
+                    console.error('Failed to load categories:', error);
+                }
                 
-                // Then load user's wagers
+                // Load user's wagers
                 await loadMyWagers();
             } catch (error) {
                 console.error('Failed to initialize page:', error);
@@ -610,19 +635,24 @@
             document.getElementById('emptyState').style.display = 'none';
 
             try {
-                // Map frontend status to database status
                 const statusMap = {
                     'active': 'in_progress',
-                    'pending': 'pending_approval',
+                    'pending': 'pending_approval', 
                     'completed': 'completed',
                     'all': null
                 };
 
-                const dbStatus = statusMap[currentStatus] || currentStatus;
-                const response = await teteAPI.getMyWagers(dbStatus, currentPage);
+                const dbStatus = statusMap[currentStatus];
+
+                let response;
+                if (dbStatus === null) {
+                    response = await teteAPI.getMyWagers(null, currentPage);
+                } else {
+                    response = await teteAPI.getMyWagers(dbStatus, currentPage);
+                }
+                
                 myWagers = response.wagers;
                 
-                // Update stats
                 if (response.stats) {
                     stats = response.stats;
                     updateStats();
@@ -664,9 +694,9 @@
                 const statusClass = getStatusClass(wager.status);
                 const canSubmitOutcomeResult = canSubmitOutcome(wager);
                 
-                // Get category names from loaded data (no API calls!)
-                const category = getCategoryById(wager.category_id);
-                const subcategory = wager.subcategory_id ? getSubcategoryById(wager.subcategory_id) : null;
+                // Use window functions for categories
+                const category = window.getCategoryById(wager.category_id);
+                const subcategory = wager.subcategory_id ? window.getSubcategoryById(wager.subcategory_id) : null;
                 const categoryDisplay = category ? 
                     `${category.icon || '📁'} ${category.name}${subcategory ? ' - ' + subcategory.name : ''}` : 
                     '📁 Unknown Category';
@@ -723,7 +753,6 @@
                 `;
             }).join('');
 
-            // Initialize countdowns
             myWagers.forEach(wager => {
                 if (wager.status === 'in_progress') {
                     initializeWagerCountdown(wager);
@@ -731,7 +760,7 @@
             });
         }
 
-        // Submit Type 1 outcome
+        // Action functions
         async function submitType1Outcome(wagerId, outcome) {
             if (!confirm(`Are you sure you want to submit "${outcome === 'win' ? 'I WIN' : 'I LOSE'}"? This cannot be changed.`)) {
                 return;
@@ -745,26 +774,20 @@
 
                 const response = await teteAPI.submitOutcome(wagerId, outcomeData);
                 showToast('Outcome submitted successfully!', 'success');
-                
-                // Reload wagers
                 loadMyWagers();
             } catch (error) {
                 showToast(error.message || 'Failed to submit outcome', 'error');
             }
         }
 
-        // Show Type 2 outcome form
         function showType2OutcomeForm(wagerId) {
-            // For now, redirect to wager details page
             window.location.href = `/wager-details.html?id=${wagerId}#submit-outcome`;
         }
 
-        // View approval
         function viewApproval(wagerId) {
             window.location.href = `/wager-details.html?id=${wagerId}#approval`;
         }
 
-        // View wager details
         function viewWagerDetails(wagerId) {
             window.location.href = `/wager-details.html?id=${wagerId}`;
         }
@@ -778,86 +801,6 @@
                 loadMyWagers();
             }
         }, 30000);
-
-        // Add these functions to your wagers.html file, before the closing </script> tag
-
-// Show loading overlay
-function showLoadingOverlay() {
-    let overlay = document.getElementById('loadingOverlay');
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'loadingOverlay';
-        overlay.innerHTML = `
-            <div style="
-                position: fixed; 
-                top: 0; 
-                left: 0; 
-                width: 100%; 
-                height: 100%; 
-                background: rgba(0,0,0,0.8); 
-                display: flex; 
-                align-items: center; 
-                justify-content: center; 
-                z-index: 9999;
-                color: white;
-                font-size: 18px;
-                flex-direction: column;
-                gap: 20px;
-            ">
-                <div class="spinner" style="
-                    width: 40px;
-                    height: 40px;
-                    border: 4px solid rgba(231,76,60,0.3);
-                    border-top: 4px solid #e74c3c;
-                    border-radius: 50%;
-                    animation: spin 1s linear infinite;
-                "></div>
-                <div>Processing your request...</div>
-            </div>
-        `;
-        
-        // Add keyframes for spinner animation
-        if (!document.getElementById('spinnerStyles')) {
-            const style = document.createElement('style');
-            style.id = 'spinnerStyles';
-            style.textContent = `
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        
-        document.body.appendChild(overlay);
-    }
-    overlay.style.display = 'flex';
-}
-
-// Hide loading overlay
-function hideLoadingOverlay() {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-        overlay.style.display = 'none';
-    }
-}
-
-// Optional: Show loading overlay with custom message
-function showLoadingOverlayWithMessage(message = 'Processing your request...') {
-    let overlay = document.getElementById('loadingOverlay');
-    if (!overlay) {
-        showLoadingOverlay(); // Create the overlay first
-        overlay = document.getElementById('loadingOverlay');
-    }
-    
-    // Update the message
-    const messageElement = overlay.querySelector('div:last-child');
-    if (messageElement) {
-        messageElement.textContent = message;
-    }
-    
-    overlay.style.display = 'flex';
-}
     </script>
 </body>
 </html>

@@ -122,120 +122,119 @@ class WagerController {
         }
     }
 
- async getWagers(req, res) {
-    try {
-        console.log('🎯 getWagers called with query:', req.query);
-        
-        const { tier, category, status = 'open', page = 1, limit = 20 } = req.query;
-        const offset = (page - 1) * limit;
-
-        console.log('📊 Parsed params:', { tier, category, status, page, limit, offset });
-
-        // FIXED: Handle category name → ID lookup
-        let categoryId = null;
-        if (category) {
-            console.log('🔍 Processing category:', category);
+    async getWagers(req, res) {
+        try {
+            console.log('🎯 getWagers called with query:', req.query);
             
-            // Check if it's already a UUID (36 chars with dashes)
-            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(category);
-            
-            if (isUUID) {
-                categoryId = category;
-                console.log('✅ Category is UUID:', categoryId);
-            } else {
-                // Look up category by name or slug
-                console.log('🔍 Looking up category by name/slug:', category);
-                const { data: categoryData, error: catError } = await supabaseAdmin
-                    .from('wager_categories')
-                    .select('id')
-                    .or(`name.ilike.${category},slug.ilike.${category}`)
-                    .single();
+            const { tier, category, status = 'open', page = 1, limit = 20 } = req.query;
+            const offset = (page - 1) * limit;
 
-                if (catError || !categoryData) {
-                    console.log('❌ Category not found:', category, catError);
-                    return res.status(400).json({ 
-                        error: `Category "${category}" not found` 
-                    });
+            console.log('📊 Parsed params:', { tier, category, status, page, limit, offset });
+
+            // FIXED: Handle category name → ID lookup
+            let categoryId = null;
+            if (category) {
+                console.log('🔍 Processing category:', category);
+                
+                // Check if it's already a UUID (36 chars with dashes)
+                const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(category);
+                
+                if (isUUID) {
+                    categoryId = category;
+                    console.log('✅ Category is UUID:', categoryId);
+                } else {
+                    // Look up category by name or slug
+                    console.log('🔍 Looking up category by name/slug:', category);
+                    const { data: categoryData, error: catError } = await supabaseAdmin
+                        .from('wager_categories')
+                        .select('id')
+                        .or(`name.ilike.${category},slug.ilike.${category}`)
+                        .single();
+
+                    if (catError || !categoryData) {
+                        console.log('❌ Category not found:', category, catError);
+                        return res.status(400).json({ 
+                            error: `Category "${category}" not found` 
+                        });
+                    }
+
+                    categoryId = categoryData.id;
+                    console.log('✅ Found category ID:', categoryId);
                 }
-
-                categoryId = categoryData.id;
-                console.log('✅ Found category ID:', categoryId);
             }
-        }
 
-        // Build the query
-        let query = supabaseAdmin
-            .from('wagers')
-            .select(`
-                *,
-                creator:users!creator_id(id, username, avatar_url),
-                wager_categories!category_id(name, slug),
-                wager_subcategories!subcategory_id(name, slug)
-            `, { count: 'exact' })
-            .eq('status', status)
-            .order('created_at', { ascending: false })
-            .range(offset, offset + limit - 1);
+            // Build the query
+            let query = supabaseAdmin
+                .from('wagers')
+                .select(`
+                    *,
+                    creator:users!creator_id(id, username, avatar_url),
+                    wager_categories!category_id(name, slug),
+                    wager_subcategories!subcategory_id(name, slug)
+                `, { count: 'exact' })
+                .eq('status', status)
+                .order('created_at', { ascending: false })
+                .range(offset, offset + limit - 1);
 
-        if (tier) {
-            console.log('🎯 Adding tier filter:', tier);
-            query = query.eq('tier', tier);
-        }
-        
-        if (categoryId) {
-            console.log('🎯 Adding category filter:', categoryId);
-            query = query.eq('category_id', categoryId);
-        }
-
-        console.log('📡 Executing query...');
-        const { data: wagers, error, count } = await query;
-
-        if (error) {
-            console.error('❌ Database query error:', error);
-            console.error('🔍 Error details:', {
-                message: error.message,
-                code: error.code,
-                details: error.details,
-                hint: error.hint
-            });
+            if (tier) {
+                console.log('🎯 Adding tier filter:', tier);
+                query = query.eq('tier', tier);
+            }
             
-            return res.status(500).json({ 
-                error: 'Failed to fetch wagers',
-                debug: error.message
+            if (categoryId) {
+                console.log('🎯 Adding category filter:', categoryId);
+                query = query.eq('category_id', categoryId);
+            }
+
+            console.log('📡 Executing query...');
+            const { data: wagers, error, count } = await query;
+
+            if (error) {
+                console.error('❌ Database query error:', error);
+                console.error('🔍 Error details:', {
+                    message: error.message,
+                    code: error.code,
+                    details: error.details,
+                    hint: error.hint
+                });
+                
+                return res.status(500).json({ 
+                    error: 'Failed to fetch wagers',
+                    debug: error.message
+                });
+            }
+
+            console.log('✅ Query successful:', {
+                wagersCount: wagers?.length || 0,
+                totalCount: count
+            });
+
+            // Format the response to match frontend expectations
+            const formattedWagers = (wagers || []).map(wager => ({
+                ...wager,
+                // Ensure backward compatibility
+                categories: wager.wager_categories,
+                subcategories: wager.wager_subcategories
+            }));
+
+            res.json({
+                wagers: formattedWagers,
+                pagination: {
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    total: count || 0,
+                    pages: Math.ceil((count || 0) / limit)
+                }
+            });
+
+        } catch (error) {
+            console.error('❌ Get wagers catch error:', error);
+            res.status(500).json({ 
+                error: 'Server error',
+                debug: error.message 
             });
         }
-
-        console.log('✅ Query successful:', {
-            wagersCount: wagers?.length || 0,
-            totalCount: count
-        });
-
-        // Format the response to match frontend expectations
-        const formattedWagers = (wagers || []).map(wager => ({
-            ...wager,
-            // Ensure backward compatibility
-            categories: wager.wager_categories,
-            subcategories: wager.wager_subcategories
-        }));
-
-        res.json({
-            wagers: formattedWagers,
-            pagination: {
-                page: parseInt(page),
-                limit: parseInt(limit),
-                total: count || 0,
-                pages: Math.ceil((count || 0) / limit)
-            }
-        });
-
-    } catch (error) {
-        console.error('❌ Get wagers catch error:', error);
-        res.status(500).json({ 
-            error: 'Server error',
-            debug: error.message 
-        });
     }
-}
-  
 
     async joinWager(req, res) {
         try {
@@ -689,11 +688,11 @@ class WagerController {
             await supabaseAdmin
                 .from('wagers')
                 .update({
-                    penalty_amount: penalty * 2,
-                    status: 'completed',
-                    completed_at: new Date().toISOString()
-                })
-                .eq('id', wager.id);
+                penalty_amount: penalty * 2,
+                status: 'completed',
+                completed_at: new Date().toISOString()
+            })
+            .eq('id', wager.id);
         }
     }
 
@@ -922,15 +921,15 @@ class WagerController {
             const { status, page = 1, limit = 20 } = req.query;
             const offset = (page - 1) * limit;
 
+            console.log('📊 getMyWagers called:', { userId, status, page, limit });
+
+            // First, let's try a simpler query to see if basic data works
             let query = supabaseAdmin
                 .from('wagers')
                 .select(`
                     *,
                     creator:users!creator_id(id, username, avatar_url),
-                    joiner:users!joiner_id(id, username, avatar_url),
-                    wager_categories!category_id(name, slug),
-                    wager_subcategories!subcategory_id(name, slug),
-                    disputes(*)
+                    joiner:users!joiner_id(id, username, avatar_url)
                 `, { count: 'exact' })
                 .or(`creator_id.eq.${userId},joiner_id.eq.${userId}`)
                 .order('created_at', { ascending: false })
@@ -943,29 +942,72 @@ class WagerController {
             const { data: wagers, error, count } = await query;
 
             if (error) {
-                console.error('Get my wagers error:', error);
-                return res.status(500).json({ error: 'Failed to fetch wagers' });
+                console.error('❌ Get my wagers database error:', {
+                    message: error.message,
+                    code: error.code,
+                    details: error.details,
+                    hint: error.hint
+                });
+                return res.status(500).json({ 
+                    error: 'Failed to fetch wagers',
+                    details: error.message 
+                });
+            }
+
+            console.log('✅ Found wagers:', wagers?.length || 0);
+
+            // Calculate stats
+            const stats = {
+                total: 0,
+                active: 0,
+                wins: 0,
+                losses: 0,
+                earnings: 0
+            };
+
+            if (wagers && wagers.length > 0) {
+                stats.total = wagers.length;
+                stats.active = wagers.filter(w => 
+                    ['in_progress', 'pending_approval', 'pending_outcome'].includes(w.status)
+                ).length;
+                
+                wagers.forEach(wager => {
+                    if (wager.status === 'completed' && wager.winner_id) {
+                        if (wager.winner_id === userId) {
+                            stats.wins++;
+                            // Calculate earnings (amount won minus commission)
+                            const winnings = (wager.amount * 2) * 0.9; // 90% after commission
+                            stats.earnings += winnings - wager.amount; // Net profit
+                        } else {
+                            stats.losses++;
+                        }
+                    }
+                });
             }
 
             // Add user role to each wager
-            const wagersWithRole = wagers.map(wager => ({
+            const wagersWithRole = (wagers || []).map(wager => ({
                 ...wager,
                 userRole: wager.creator_id === userId ? 'creator' : 'joiner'
             }));
 
             res.json({
                 wagers: wagersWithRole,
+                stats,
                 pagination: {
                     page: parseInt(page),
                     limit: parseInt(limit),
-                    total: count,
-                    pages: Math.ceil(count / limit)
+                    total: count || 0,
+                    pages: Math.ceil((count || 0) / limit)
                 }
             });
 
         } catch (error) {
-            console.error('Get my wagers error:', error);
-            res.status(500).json({ error: 'Server error' });
+            console.error('❌ Get my wagers catch error:', error);
+            res.status(500).json({ 
+                error: 'Server error',
+                details: error.message 
+            });
         }
     }
 

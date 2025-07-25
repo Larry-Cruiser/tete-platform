@@ -5,6 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Browse Wagers - Tété Platform</title>
     <link rel="stylesheet" href="/css/style.css">
+    
+    <!-- Loading overlay functions - DEFINED FIRST -->
+    <script>
+        function showLoadingOverlay() {
+            console.log('showLoadingOverlay called');
+            let overlay = document.getElementById('loadingOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'loadingOverlay';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;color:white;font-size:18px;flex-direction:column;gap:20px;';
+                overlay.innerHTML = `
+                    <div style="width:40px;height:40px;border:4px solid rgba(231,76,60,0.3);border-top:4px solid #e74c3c;border-radius:50%;animation:spin 1s linear infinite;"></div>
+                    <div>Processing your request...</div>
+                `;
+                
+                // Add spinner animation
+                if (!document.getElementById('spinnerStyles')) {
+                    const style = document.createElement('style');
+                    style.id = 'spinnerStyles';
+                    style.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+                    document.head.appendChild(style);
+                }
+                
+                document.body.appendChild(overlay);
+            }
+            overlay.style.display = 'flex';
+        }
+
+        function hideLoadingOverlay() {
+            console.log('hideLoadingOverlay called');
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+        }
+    </script>
+    
     <style>
         .wagers-container {
             min-height: 100vh;
@@ -512,22 +549,85 @@
             // Redirect handled by requireAuth
         }
 
+        // Global variables
         let currentPage = 1;
         let currentTier = 'all';
         let currentCategory = '';
         let currentSort = { column: 'decision_datetime', direction: 'desc' };
-        let allWagers = []; // Store all wagers for sorting
+        let allWagers = [];
+
+        // Utility Functions
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = date - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Tomorrow';
+            if (diffDays > 0 && diffDays <= 7) return `${diffDays} days`;
+            
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
 
         // Initialize page
         async function initializePage() {
             try {
-                // Load categories from database first
-                await loadCategories();
+                // Load categories directly
+                try {
+                    const response = await fetch('/api/general/categories');
+                    const data = await response.json();
+                    
+                    // Store in global variables (same as window.loadCategories does)
+                    window.DB_CATEGORIES = data.categories;
+                    window.CATEGORY_LOOKUP = {};
+                    window.SUBCATEGORY_LOOKUP = {};
+                    
+                    data.categories.forEach(cat => {
+                        window.CATEGORY_LOOKUP[cat.id] = cat;
+                        cat.subcategories.forEach(sub => {
+                            window.SUBCATEGORY_LOOKUP[sub.id] = sub;
+                        });
+                    });
+                    
+                    // Define the helper functions after loading data
+                    window.getCategoryById = function(categoryId) {
+                        return window.CATEGORY_LOOKUP[categoryId] || null;
+                    };
+
+                    window.getSubcategoryById = function(subcategoryId) {
+                        return window.SUBCATEGORY_LOOKUP[subcategoryId] || null;
+                    };
+
+                    window.getCategoryName = function(categoryId) {
+                        return window.CATEGORY_LOOKUP[categoryId]?.name || 'Unknown';
+                    };
+
+                    window.getAllCategories = function() {
+                        return Object.entries(window.CATEGORY_LOOKUP).map(([id, data]) => ({
+                            id: id,
+                            name: data.name,
+                            icon: data.icon
+                        }));
+                    };
+                    
+                    console.log('Categories loaded:', data.categories.length);
+                } catch (error) {
+                    console.error('Failed to load categories:', error);
+                }
                 
-                // Populate category filter
                 populateCategoryFilter();
-                
-                // Load wagers
                 await loadWagers();
             } catch (error) {
                 console.error('Failed to initialize page:', error);
@@ -538,7 +638,7 @@
         // Populate category filter dropdown
         function populateCategoryFilter() {
             const select = document.getElementById('categoryFilter');
-            const categories = getAllCategories();
+            const categories = window.getAllCategories();
             
             select.innerHTML = '<option value="">All Categories</option>';
             categories.forEach(cat => {
@@ -553,7 +653,6 @@
         async function loadWagers(page = 1) {
             currentPage = page;
             
-            // Show loading state
             document.getElementById('loadingState').style.display = 'block';
             document.getElementById('tableWrapper').style.display = 'none';
             document.getElementById('pagination').style.display = 'none';
@@ -574,18 +673,13 @@
                 }
 
                 const response = await teteAPI.getWagers(params);
-                
-                // Store wagers for sorting
                 allWagers = response.wagers;
 
-                // Hide loading state
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('tableWrapper').style.display = 'block';
 
-                // Sort and display wagers
                 sortAndDisplayWagers();
 
-                // Show pagination if needed
                 if (response.pagination && response.pagination.pages > 1) {
                     showPagination(response.pagination);
                 }
@@ -599,7 +693,6 @@
 
         // Sort and display wagers
         function sortAndDisplayWagers() {
-            // Sort the wagers
             const sortedWagers = [...allWagers].sort((a, b) => {
                 let aVal, bVal;
                 
@@ -609,8 +702,8 @@
                         bVal = b.tier;
                         break;
                     case 'category_name':
-                        aVal = getCategoryName(a.category_id);
-                        bVal = getCategoryName(b.category_id);
+                        aVal = window.getCategoryName(a.category_id);
+                        bVal = window.getCategoryName(b.category_id);
                         break;
                     case 'amount':
                         aVal = parseFloat(a.amount);
@@ -629,13 +722,11 @@
                         bVal = b[currentSort.column];
                 }
                 
-                // Handle string comparisons
                 if (typeof aVal === 'string') {
                     aVal = aVal.toLowerCase();
                     bVal = bVal.toLowerCase();
                 }
                 
-                // Compare values
                 if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
                 if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
                 return 0;
@@ -645,9 +736,8 @@
             updateSortIcons();
         }
 
-        // Sort function
+        // Sort table
         function sortTable(column) {
-            // Toggle direction if same column
             if (currentSort.column === column) {
                 currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
             } else {
@@ -660,13 +750,11 @@
 
         // Update sort icons
         function updateSortIcons() {
-            // Reset all icons
             document.querySelectorAll('.sort-icon').forEach(icon => {
                 icon.textContent = '↕';
                 icon.classList.remove('active');
             });
             
-            // Update active column icon
             const activeHeader = document.querySelector(`th[onclick*="${currentSort.column}"] .sort-icon`);
             if (activeHeader) {
                 activeHeader.textContent = currentSort.direction === 'asc' ? '↑' : '↓';
@@ -684,9 +772,8 @@
             }
             
             tableBody.innerHTML = wagers.map(wager => {
-                // Get category and subcategory info
-                const category = getCategoryById(wager.category_id);
-                const subcategory = wager.subcategory_id ? getSubcategoryById(wager.subcategory_id) : null;
+                const category = window.getCategoryById(wager.category_id);
+                const subcategory = wager.subcategory_id ? window.getSubcategoryById(wager.subcategory_id) : null;
                 const categoryDisplay = category ? 
                     `<span class="wager-category">${category.icon || '📁'} ${category.name}${subcategory ? ' - ' + subcategory.name : ''}</span>` : 
                     '<span class="wager-category">📁 Unknown</span>';
@@ -723,45 +810,17 @@
             }).join('');
         }
 
-        // Format date
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffTime = date - now;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays === 0) return 'Today';
-            if (diffDays === 1) return 'Tomorrow';
-            if (diffDays > 0 && diffDays <= 7) return `${diffDays} days`;
-            
-            return date.toLocaleDateString();
-        }
-
-        // Escape HTML to prevent XSS
-        function escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, m => map[m]);
-        }
-
         // Show pagination controls
         function showPagination(pagination) {
             const paginationDiv = document.getElementById('pagination');
             
             let html = '';
             
-            // Previous button
             html += `<button class="page-button" onclick="loadWagers(${pagination.page - 1})" ${pagination.page === 1 ? 'disabled' : ''}>
                 ← Previous
             </button>`;
             
-            // Page numbers
-            const maxPages = 5; // Show max 5 page buttons
+            const maxPages = 5;
             let startPage = Math.max(1, pagination.page - Math.floor(maxPages / 2));
             let endPage = Math.min(pagination.pages, startPage + maxPages - 1);
             
@@ -785,7 +844,6 @@
                 html += `<button class="page-button" onclick="loadWagers(${pagination.pages})">${pagination.pages}</button>`;
             }
             
-            // Next button
             html += `<button class="page-button" onclick="loadWagers(${pagination.page + 1})" ${pagination.page === pagination.pages ? 'disabled' : ''}>
                 Next →
             </button>`;
@@ -799,15 +857,13 @@
             window.location.href = `/wager-details.html?id=${wagerId}`;
         }
 
-        // Join wager
+        // Join wager - FIXED FUNCTION
         async function joinWager(wagerId, challengeType) {
             if (!requireCompleteProfile()) return;
 
             if (challengeType === 'type2') {
-                // For Type 2, redirect to details page to enter prediction
                 window.location.href = `/wager-details.html?id=${wagerId}&action=join`;
             } else {
-                // For Type 1, join directly
                 if (confirm('Are you sure you want to join this wager?')) {
                     try {
                         showLoadingOverlay();
@@ -815,7 +871,6 @@
                         hideLoadingOverlay();
                         showToast('Successfully joined wager!', 'success');
                         
-                        // Redirect to wager details
                         setTimeout(() => {
                             window.location.href = `/wager-details.html?id=${wagerId}`;
                         }, 1000);
@@ -827,7 +882,7 @@
             }
         }
 
-        // Handle tier filter
+        // Event Listeners
         document.querySelectorAll('.tier-tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 document.querySelectorAll('.tier-tab').forEach(t => t.classList.remove('active'));
@@ -837,7 +892,6 @@
             });
         });
 
-        // Handle category filter
         document.getElementById('categoryFilter').addEventListener('change', function() {
             currentCategory = this.value;
             loadWagers(1);
