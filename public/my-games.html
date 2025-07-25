@@ -488,7 +488,16 @@
             document.getElementById('emptyState').style.display = 'none';
 
             try {
-                const response = await teteAPI.getMyWagers(currentStatus === 'all' ? null : currentStatus, currentPage);
+                // Map frontend status to database status
+const statusMap = {
+    'active': 'in_progress',
+    'pending': 'pending_approval',
+    'completed': 'completed',
+    'all': null
+};
+
+const dbStatus = statusMap[currentStatus] || currentStatus;
+const response = await teteAPI.getMyWagers(dbStatus, currentPage);
                 myWagers = response.wagers;
                 
                 // Update stats
