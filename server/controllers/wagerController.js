@@ -78,7 +78,7 @@ class WagerController {
                     decision_datetime: decisionTime.toISOString(),
                     status: 'open'
                 })
-                .select('*, categories(name), subcategories(name)')
+                .select('*, wager_categories!category_id(name), wager_subcategories!subcategory_id(name)')
                 .single();
 
             if (wagerError) {
