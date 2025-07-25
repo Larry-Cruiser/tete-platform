@@ -62,7 +62,7 @@ class WagerController {
             // Start transaction
             const newBalance = parseFloat(wallet.balance) - amount;
 
-            // Create wager
+            // Create wager - FIXED: Updated table names
             const { data: wager, error: wagerError } = await supabaseAdmin
                 .from('wagers')
                 .insert({
@@ -145,6 +145,7 @@ class WagerController {
             const { data: wagers, error, count } = await query;
 
             if (error) {
+                console.error('Get wagers error:', error);
                 return res.status(500).json({ error: 'Failed to fetch wagers' });
             }
 
@@ -870,6 +871,7 @@ class WagerController {
             const { data: wagers, error, count } = await query;
 
             if (error) {
+                console.error('Get my wagers error:', error);
                 return res.status(500).json({ error: 'Failed to fetch wagers' });
             }
 
@@ -921,6 +923,7 @@ class WagerController {
                 .single();
 
             if (error || !wager) {
+                console.error('Get wager details error:', error);
                 return res.status(404).json({ error: 'Wager not found' });
             }
 
