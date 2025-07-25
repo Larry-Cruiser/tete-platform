@@ -78,7 +78,7 @@ class WagerController {
                     decision_datetime: decisionTime.toISOString(),
                     status: 'open'
                 })
-                .select('*, wager_categories(name), wager_subcategories(name)')
+                .select('*, categories(name), subcategories(name)')
                 .single();
 
             if (wagerError) {
@@ -132,8 +132,8 @@ class WagerController {
                 .select(`
                     *,
                     creator:users!creator_id(id, username, avatar_url),
-                    wager_categories(name, slug),
-                    wager_subcategories(name, slug)
+                    categories(name, slug),
+subcategories(name, slug)
                 `, { count: 'exact' })
                 .eq('status', status)
                 .order('created_at', { ascending: false })
@@ -856,8 +856,8 @@ class WagerController {
                     *,
                     creator:users!creator_id(id, username, avatar_url),
                     joiner:users!joiner_id(id, username, avatar_url),
-                    wager_categories(name, slug),
-                    wager_subcategories(name, slug),
+                    categories(name, slug),
+                    subcategories(name, slug),
                     disputes(*)
                 `, { count: 'exact' })
                 .or(`creator_id.eq.${userId},joiner_id.eq.${userId}`)
@@ -908,8 +908,8 @@ class WagerController {
                     *,
                     creator:users!creator_id(id, username, avatar_url, dispute_losses),
                     joiner:users!joiner_id(id, username, avatar_url, dispute_losses),
-                    wager_categories(name, slug),
-                    wager_subcategories(name, slug),
+                    categories(name, slug),
+                    subcategories(name, slug),
                     chat_messages(
                         id,
                         message,
