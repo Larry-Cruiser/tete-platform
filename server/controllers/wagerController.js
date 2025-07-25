@@ -980,8 +980,8 @@ class WagerController {
                     *,
                     creator:users!creator_id(id, username, avatar_url, dispute_losses),
                     joiner:users!joiner_id(id, username, avatar_url, dispute_losses),
-                    categories(name, slug),
-                    subcategories(name, slug),
+                    wager_categories!category_id(name, slug),
+                    wager_subcategories!subcategory_id(name, slug),
                     chat_messages(
                         id,
                         message,
