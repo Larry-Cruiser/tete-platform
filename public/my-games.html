@@ -456,159 +456,6 @@
             earnings: 0
         };
 
-        // Initialize page - load categories first, then wagers
-        async function initializePage() {
-            try {
-                // Load categories from database
-                await loadCategories();
-                
-                // Then load user's wagers
-                await loadMyWagers();
-            } catch (error) {
-                console.error('Failed to initialize page:', error);
-                showToast('Failed to load page data', 'error');
-            }
-        }
-
-        // Tab switching
-        document.querySelectorAll('.glass-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                document.querySelectorAll('.glass-tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                currentStatus = this.dataset.status;
-                currentPage = 1;
-                loadMyWagers();
-            });
-        });
-
-        // Load user's wagers
-        async function loadMyWagers() {
-            document.getElementById('loadingContainer').style.display = 'block';
-            document.getElementById('wagerGrid').innerHTML = '';
-            document.getElementById('emptyState').style.display = 'none';
-
-            try {
-                // Map frontend status to database status
-const statusMap = {
-    'active': 'in_progress',
-    'pending': 'pending_approval',
-    'completed': 'completed',
-    'all': null
-};
-
-const dbStatus = statusMap[currentStatus] || currentStatus;
-const response = await teteAPI.getMyWagers(dbStatus, currentPage);
-                myWagers = response.wagers;
-                
-                // Update stats
-                if (response.stats) {
-                    stats = response.stats;
-                    updateStats();
-                }
-
-                if (myWagers.length === 0) {
-                    document.getElementById('loadingContainer').style.display = 'none';
-                    document.getElementById('emptyState').style.display = 'block';
-                    return;
-                }
-
-                displayWagers();
-                document.getElementById('loadingContainer').style.display = 'none';
-            } catch (error) {
-                console.error('Failed to load wagers:', error);
-                document.getElementById('loadingContainer').style.display = 'none';
-                showToast('Failed to load games', 'error');
-            }
-        }
-
-        // Update stats display
-        function updateStats() {
-            document.getElementById('totalWagers').textContent = stats.total || 0;
-            document.getElementById('activeWagers').textContent = stats.active || 0;
-            
-            const winRate = stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0;
-            document.getElementById('winRate').textContent = winRate + '%';
-            
-            document.getElementById('totalEarnings').textContent = formatCurrency(stats.earnings || 0);
-        }
-
-        // Display wagers
-        function displayWagers() {
-            const grid = document.getElementById('wagerGrid');
-            
-            grid.innerHTML = myWagers.map(wager => {
-                const isCreator = wager.creator_id === teteAPI.user.id;
-                const opponent = isCreator ? wager.joiner : wager.creator;
-                const statusClass = getStatusClass(wager.status);
-                const canSubmitOutcome = canSubmitOutcome(wager);
-                
-                // Get category names from loaded data (no API calls!)
-                const category = getCategoryById(wager.category_id);
-                const subcategory = wager.subcategory_id ? getSubcategoryById(wager.subcategory_id) : null;
-                const categoryDisplay = category ? 
-                    `${category.icon || '📁'} ${category.name}${subcategory ? ' - ' + subcategory.name : ''}` : 
-                    '📁 Unknown Category';
-                
-                return `
-                    <div class="wager-card" onclick="viewWagerDetails('${wager.id}')">
-                        <div class="wager-header">
-                            <div>
-                                <h3 class="wager-title">${wager.title}</h3>
-                                <div class="wager-meta">
-                                    <span class="wager-meta-item">
-                                        <span class="tier-badge ${wager.tier}">${wager.tier.toUpperCase()}</span>
-                                    </span>
-                                    <span class="wager-meta-item">
-                                        💰 ${formatCurrency(wager.amount)}
-                                    </span>
-                                    <span class="wager-meta-item">
-                                        ${categoryDisplay}
-                                    </span>
-                                </div>
-                            </div>
-                            <span class="wager-status ${statusClass}">${formatStatus(wager.status)}</span>
-                        </div>
-
-                        ${wager.status === 'in_progress' ? `
-                            <div class="wager-countdown">
-                                <div class="countdown-label">
-                                    ${new Date(wager.decision_datetime) > new Date() ? 'Outcome available in:' : 'Submit outcome within:'}
-                                </div>
-                                <div class="countdown-timer" id="countdown-${wager.id}">
-                                    Calculating...
-                                </div>
-                            </div>
-                        ` : ''}
-
-                        <div class="wager-participants">
-                            <div class="participant">
-                                <div class="participant-label">Creator</div>
-                                <div class="participant-name">
-                                    ${isCreator ? 'You' : (wager.creator?.username || 'Unknown')}
-                                </div>
-                            </div>
-                            <div class="vs-divider">VS</div>
-                            <div class="participant">
-                                <div class="participant-label">Challenger</div>
-                                <div class="participant-name">
-                                    ${opponent ? (isCreator ? (opponent.username || 'Unknown') : 'You') : 'Waiting...'}
-                                </div>
-                            </div>
-                        </div>
-
-                        ${renderWagerActions(wager, isCreator, canSubmitOutcome)}
-                    </div>
-                `;
-            }).join('');
-
-            // Initialize countdowns
-            myWagers.forEach(wager => {
-                if (wager.status === 'in_progress') {
-                    initializeWagerCountdown(wager);
-                }
-            });
-        }
-
         // Format status for display
         function formatStatus(status) {
             const statusMap = {
@@ -637,7 +484,7 @@ const response = await teteAPI.getMyWagers(dbStatus, currentPage);
             return statusMap[status] || 'status-pending';
         }
 
-        // Check if user can submit outcome
+        // Check if user can submit outcome - MOVED BEFORE displayWagers
         function canSubmitOutcome(wager) {
             if (wager.status !== 'in_progress' && wager.status !== 'pending_outcome') return false;
             
@@ -729,6 +576,159 @@ const response = await teteAPI.getMyWagers(dbStatus, currentPage);
             
             // Store interval for cleanup
             element.dataset.interval = interval;
+        }
+
+        // Initialize page - load categories first, then wagers
+        async function initializePage() {
+            try {
+                // Load categories from database
+                await loadCategories();
+                
+                // Then load user's wagers
+                await loadMyWagers();
+            } catch (error) {
+                console.error('Failed to initialize page:', error);
+                showToast('Failed to load page data', 'error');
+            }
+        }
+
+        // Tab switching
+        document.querySelectorAll('.glass-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.glass-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                currentStatus = this.dataset.status;
+                currentPage = 1;
+                loadMyWagers();
+            });
+        });
+
+        // Load user's wagers
+        async function loadMyWagers() {
+            document.getElementById('loadingContainer').style.display = 'block';
+            document.getElementById('wagerGrid').innerHTML = '';
+            document.getElementById('emptyState').style.display = 'none';
+
+            try {
+                // Map frontend status to database status
+                const statusMap = {
+                    'active': 'in_progress',
+                    'pending': 'pending_approval',
+                    'completed': 'completed',
+                    'all': null
+                };
+
+                const dbStatus = statusMap[currentStatus] || currentStatus;
+                const response = await teteAPI.getMyWagers(dbStatus, currentPage);
+                myWagers = response.wagers;
+                
+                // Update stats
+                if (response.stats) {
+                    stats = response.stats;
+                    updateStats();
+                }
+
+                if (myWagers.length === 0) {
+                    document.getElementById('loadingContainer').style.display = 'none';
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+
+                displayWagers();
+                document.getElementById('loadingContainer').style.display = 'none';
+            } catch (error) {
+                console.error('Failed to load wagers:', error);
+                document.getElementById('loadingContainer').style.display = 'none';
+                showToast('Failed to load games', 'error');
+            }
+        }
+
+        // Update stats display
+        function updateStats() {
+            document.getElementById('totalWagers').textContent = stats.total || 0;
+            document.getElementById('activeWagers').textContent = stats.active || 0;
+            
+            const winRate = stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0;
+            document.getElementById('winRate').textContent = winRate + '%';
+            
+            document.getElementById('totalEarnings').textContent = formatCurrency(stats.earnings || 0);
+        }
+
+        // Display wagers
+        function displayWagers() {
+            const grid = document.getElementById('wagerGrid');
+            
+            grid.innerHTML = myWagers.map(wager => {
+                const isCreator = wager.creator_id === teteAPI.user.id;
+                const opponent = isCreator ? wager.joiner : wager.creator;
+                const statusClass = getStatusClass(wager.status);
+                const canSubmitOutcomeResult = canSubmitOutcome(wager);
+                
+                // Get category names from loaded data (no API calls!)
+                const category = getCategoryById(wager.category_id);
+                const subcategory = wager.subcategory_id ? getSubcategoryById(wager.subcategory_id) : null;
+                const categoryDisplay = category ? 
+                    `${category.icon || '📁'} ${category.name}${subcategory ? ' - ' + subcategory.name : ''}` : 
+                    '📁 Unknown Category';
+                
+                return `
+                    <div class="wager-card" onclick="viewWagerDetails('${wager.id}')">
+                        <div class="wager-header">
+                            <div>
+                                <h3 class="wager-title">${wager.title}</h3>
+                                <div class="wager-meta">
+                                    <span class="wager-meta-item">
+                                        <span class="tier-badge ${wager.tier}">${wager.tier.toUpperCase()}</span>
+                                    </span>
+                                    <span class="wager-meta-item">
+                                        💰 ${formatCurrency(wager.amount)}
+                                    </span>
+                                    <span class="wager-meta-item">
+                                        ${categoryDisplay}
+                                    </span>
+                                </div>
+                            </div>
+                            <span class="wager-status ${statusClass}">${formatStatus(wager.status)}</span>
+                        </div>
+
+                        ${wager.status === 'in_progress' ? `
+                            <div class="wager-countdown">
+                                <div class="countdown-label">
+                                    ${new Date(wager.decision_datetime) > new Date() ? 'Outcome available in:' : 'Submit outcome within:'}
+                                </div>
+                                <div class="countdown-timer" id="countdown-${wager.id}">
+                                    Calculating...
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="wager-participants">
+                            <div class="participant">
+                                <div class="participant-label">Creator</div>
+                                <div class="participant-name">
+                                    ${isCreator ? 'You' : (wager.creator?.username || 'Unknown')}
+                                </div>
+                            </div>
+                            <div class="vs-divider">VS</div>
+                            <div class="participant">
+                                <div class="participant-label">Challenger</div>
+                                <div class="participant-name">
+                                    ${opponent ? (isCreator ? (opponent.username || 'Unknown') : 'You') : 'Waiting...'}
+                                </div>
+                            </div>
+                        </div>
+
+                        ${renderWagerActions(wager, isCreator, canSubmitOutcomeResult)}
+                    </div>
+                `;
+            }).join('');
+
+            // Initialize countdowns
+            myWagers.forEach(wager => {
+                if (wager.status === 'in_progress') {
+                    initializeWagerCountdown(wager);
+                }
+            });
         }
 
         // Submit Type 1 outcome
